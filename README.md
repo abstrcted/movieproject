@@ -1,19 +1,20 @@
 # 🎬 Movie Dataset Frontend - Group 2
 
 This repository hosts our **Front End** project for TCSS 460.  
-Our app focuses on movies from the last 30 years, and this API allows users to view, search, and analyze information such as titles, genres, directors, and release years.
-
+This repository serves as the starting point for our Group Web API Swaps project.
+It includes links to the Web APIs our group will use, initial design mockups, and documentation for the Alpha Sprint phase.
 ---
 
 ## 🌐 URL link to the hosted Web APIs
 
 ### **Data Web API**
-- **https://movie-api-group2-20e70498bde4.herokuapp.com/api-docs**
-
-> 🔐 **Note:** To test any protected routes in the [Swagger UI](https://movie-api-group2-20e70498bde4.herokuapp.com/api-docs), click the green **“Authorize”** button at the top, enter your provided API key in the `x-api-key` field (from Postman Testing), and then click **Authorize → Close** before sending requests.
-
+Group 4 Movie API
+- **https://tcss460-moviewebapi.onrender.com/api-docs/#/**
+Group 3 TV API
+- **https://group3-datasetwebapi.onrender.com/api-docs/**
 ### **Credentials Web API**
-- **https://credentials-api-group2-20f368b8528b.herokuapp.com/api-docs/**
+Group 5
+- **https://tcss460-group5-credentials-api.onrender.com/api-docs/**
 
 ---
 
