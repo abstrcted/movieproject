@@ -14,12 +14,13 @@ export interface RegisterCredentials {
   email: string;
   username: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  firstname: string;
+  lastname: string;
+  phone: string;
 }
 
 export interface LoginCredentials {
-  emailOrUsername: string;
+  email: string;
   password: string;
 }
 

@@ -13,10 +13,10 @@ export const authOptions: NextAuthOptions = {
       id: 'credentials',
       name: 'Credentials',
       credentials: {
-        emailOrUsername: {
-          label: 'Email or Username',
-          type: 'text',
-          placeholder: 'Enter your email or username',
+        email: {
+          label: 'Email',
+          type: 'email',
+          placeholder: 'Enter your email',
         },
         password: {
           label: 'Password',
@@ -25,14 +25,14 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        if (!credentials?.emailOrUsername || !credentials?.password) {
-          throw new Error('Email/Username and password are required');
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email and password are required');
         }
 
         try {
           // Call the credentials API
           const response = await loginUser({
-            emailOrUsername: credentials.emailOrUsername,
+            email: credentials.email,
             password: credentials.password,
           });
 

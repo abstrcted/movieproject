@@ -51,21 +51,27 @@ export const registerSchema = Yup.object({
   confirmPassword: Yup.string()
     .required('Please confirm your password')
     .oneOf([Yup.ref('password')], 'Passwords must match'),
-  firstName: Yup.string()
+  firstname: Yup.string()
+    .required('First name is required')
     .max(50, 'First name must be less than 50 characters')
     .matches(/^[a-zA-Z\s]*$/, 'First name can only contain letters and spaces'),
-  lastName: Yup.string()
+  lastname: Yup.string()
+    .required('Last name is required')
     .max(50, 'Last name must be less than 50 characters')
     .matches(/^[a-zA-Z\s]*$/, 'Last name can only contain letters and spaces'),
+  phone: Yup.string()
+    .required('Phone number is required')
+    .matches(/^\d{10}$/, 'Phone number must be exactly 10 digits (e.g., 2065551234)')
+    .length(10, 'Phone number must be exactly 10 digits'),
 });
 
 /**
  * Login form validation schema
  */
 export const loginSchema = Yup.object({
-  emailOrUsername: Yup.string()
-    .required('Email or username is required')
-    .min(3, 'Must be at least 3 characters'),
+  email: Yup.string()
+    .required('Email is required')
+    .matches(EMAIL_REGEX, 'Please enter a valid email address'),
   password: Yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters'),

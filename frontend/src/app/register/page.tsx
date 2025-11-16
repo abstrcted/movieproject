@@ -22,8 +22,9 @@ export default function RegisterPage() {
       username: '',
       password: '',
       confirmPassword: '',
-      firstName: '',
-      lastName: '',
+      firstname: '',
+      lastname: '',
+      phone: '',
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
@@ -36,8 +37,9 @@ export default function RegisterPage() {
           email: values.email,
           username: values.username,
           password: values.password,
-          firstName: values.firstName || undefined,
-          lastName: values.lastName || undefined,
+          firstname: values.firstname,
+          lastname: values.lastname,
+          phone: values.phone,
         };
 
         const response = await registerUser(credentials);
@@ -134,44 +136,75 @@ export default function RegisterPage() {
 
           {/* First Name Field */}
           <div className="form-group">
-            <label htmlFor="firstName">First Name</label>
+            <label htmlFor="firstname">
+              First Name <span className="required">*</span>
+            </label>
             <input
-              id="firstName"
-              name="firstName"
+              id="firstname"
+              name="firstname"
               type="text"
-              placeholder="Your first name (optional)"
-              value={formik.values.firstName}
+              placeholder="Your first name"
+              value={formik.values.firstname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               className={
-                formik.touched.firstName && formik.errors.firstName ? 'error' : ''
+                formik.touched.firstname && formik.errors.firstname ? 'error' : ''
               }
               disabled={isLoading}
             />
-            {formik.touched.firstName && formik.errors.firstName && (
-              <div className="error-message">{formik.errors.firstName}</div>
+            {formik.touched.firstname && formik.errors.firstname && (
+              <div className="error-message">{formik.errors.firstname}</div>
             )}
           </div>
 
           {/* Last Name Field */}
           <div className="form-group">
-            <label htmlFor="lastName">Last Name</label>
+            <label htmlFor="lastname">
+              Last Name <span className="required">*</span>
+            </label>
             <input
-              id="lastName"
-              name="lastName"
+              id="lastname"
+              name="lastname"
               type="text"
-              placeholder="Your last name (optional)"
-              value={formik.values.lastName}
+              placeholder="Your last name"
+              value={formik.values.lastname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               className={
-                formik.touched.lastName && formik.errors.lastName ? 'error' : ''
+                formik.touched.lastname && formik.errors.lastname ? 'error' : ''
               }
               disabled={isLoading}
             />
-            {formik.touched.lastName && formik.errors.lastName && (
-              <div className="error-message">{formik.errors.lastName}</div>
+            {formik.touched.lastname && formik.errors.lastname && (
+              <div className="error-message">{formik.errors.lastname}</div>
             )}
+          </div>
+
+          {/* Phone Field */}
+          <div className="form-group">
+            <label htmlFor="phone">
+              Phone Number <span className="required">*</span>
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              placeholder="10 digits (e.g., 2065551234)"
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className={
+                formik.touched.phone && formik.errors.phone ? 'error' : ''
+              }
+              disabled={isLoading}
+              maxLength={10}
+            />
+            {formik.touched.phone && formik.errors.phone && (
+              <div className="error-message">{formik.errors.phone}</div>
+            )}
+            <div className="field-hint">
+              Enter 10 digits without spaces or dashes
+            </div>
           </div>
 
           {/* Password Field */}

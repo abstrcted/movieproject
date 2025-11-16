@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   const formik = useFormik({
     initialValues: {
-      emailOrUsername: '',
+      email: '',
       password: '',
     },
     validationSchema: loginSchema,
@@ -30,7 +30,7 @@ export default function LoginPage() {
       try {
         const result = await signIn('credentials', {
           redirect: false,
-          emailOrUsername: values.emailOrUsername,
+          email: values.email,
           password: values.password,
         });
 
@@ -64,29 +64,29 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Email or Username Field */}
+          {/* Email Field */}
           <div className="form-group">
-            <label htmlFor="emailOrUsername">
-              Email or Username <span className="required">*</span>
+            <label htmlFor="email">
+              Email <span className="required">*</span>
             </label>
             <input
-              id="emailOrUsername"
-              name="emailOrUsername"
-              type="text"
-              placeholder="Enter your email or username"
-              value={formik.values.emailOrUsername}
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               className={
-                formik.touched.emailOrUsername && formik.errors.emailOrUsername
+                formik.touched.email && formik.errors.email
                   ? 'error'
                   : ''
               }
               disabled={isLoading}
-              autoComplete="username"
+              autoComplete="email"
             />
-            {formik.touched.emailOrUsername && formik.errors.emailOrUsername && (
-              <div className="error-message">{formik.errors.emailOrUsername}</div>
+            {formik.touched.email && formik.errors.email && (
+              <div className="error-message">{formik.errors.email}</div>
             )}
           </div>
 
