@@ -34,7 +34,7 @@ export default function ChangePasswordPage() {
 
     return {
       isValid: errors.length === 0,
-      errors,
+      errors
     };
   };
 
@@ -79,9 +79,11 @@ export default function ChangePasswordPage() {
 
     try {
       // NOTE: This does NOT connect to the API for this sprint (as per requirements)
-      console.log('Password change (MOCK - not connected to API):', { emailOrUsername });
+      console.log('Password change (MOCK - not connected to API):', {
+        emailOrUsername
+      });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setSuccessMessage(
         'Password change form submitted successfully! (Note: This does not connect to the API yet - functionality will be added in future sprint)'
@@ -89,7 +91,7 @@ export default function ChangePasswordPage() {
       setEmailOrUsername('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error) {
+    } catch {
       setErrors(['An error occurred while processing your request']);
     } finally {
       setIsLoading(false);

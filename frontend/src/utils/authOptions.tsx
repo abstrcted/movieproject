@@ -56,31 +56,34 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      // Initial sign in
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.username = (user as any).username;
-        token.accessToken = (user as any).token;
-        token.role = (user as any).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      // Send properties to the client
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.username as string;
-        (session.user as any).username = token.username;
-        (session.user as any).accessToken = token.accessToken;
-        (session.user as any).role = token.role;
-      }
-      return session;
-    },
+callbacks: {
+  async jwt({ token, user }) {
+    // Initial sign in
+    if (user) {
+      token.id = (user as any).id;
+      token.email = user.email;
+      token.username = (user as any).username;
+      token.accessToken = (user as any).token;
+      token.role = (user as any).role;
+    }
+    return token;
   },
+  async session({ session, token }) {
+    // Send properties to the client
+    if (token && session.user) {
+      const user = session.user as any;  // <-- cast once
+
+      user.id = token.id as string;
+      user.email = token.email as string;
+      user.name = token.username as string;
+      user.username = token.username;
+      user.accessToken = token.accessToken;
+      user.role = token.role;
+    }
+    return session;
+  },
+},
+
   pages: {
     signIn: '/login',
     error: '/login',

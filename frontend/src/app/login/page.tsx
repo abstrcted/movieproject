@@ -2,20 +2,16 @@
 
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import { loginSchema } from '@/utils/validation';
 import '../register/styles.css';
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  // Get callback URL or default to dashboard
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const formik = useFormik({
     initialValues: {
@@ -37,12 +33,13 @@ export default function LoginPage() {
         if (result?.error) {
           setErrorMessage(result.error);
         } else if (result?.ok) {
-          // Successful login - redirect to callback URL
-          router.push(callbackUrl);
+          // Successful login - redirect to browse movies page
+          router.push('/browse');
           router.refresh();
         }
-      } catch (error: any) {
-        setErrorMessage(error.message || 'An unexpected error occurred.');
+      } catch (err: unknown) {
+        console.error(err);
+        setErrorMessage('An unexpected error occurred.');
       } finally {
         setIsLoading(false);
       }
@@ -78,9 +75,7 @@ export default function LoginPage() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               className={
-                formik.touched.email && formik.errors.email
-                  ? 'error'
-                  : ''
+                formik.touched.email && formik.errors.email ? 'error' : ''
               }
               disabled={isLoading}
               autoComplete="email"
@@ -105,7 +100,9 @@ export default function LoginPage() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className={
-                  formik.touched.password && formik.errors.password ? 'error' : ''
+                  formik.touched.password && formik.errors.password
+                    ? 'error'
+                    : ''
                 }
                 disabled={isLoading}
                 autoComplete="current-password"
@@ -126,7 +123,11 @@ export default function LoginPage() {
 
           {/* Forgot Password Link */}
           <div style={{ textAlign: 'right', marginTop: '-8px' }}>
-            <a href="/change-password" className="footer-link" style={{ fontSize: '13px' }}>
+            <a
+              href="/change-password"
+              className="footer-link"
+              style={{ fontSize: '13px' }}
+            >
               Forgot Password?
             </a>
           </div>
@@ -143,7 +144,7 @@ export default function LoginPage() {
 
         <div className="auth-footer">
           <p>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <a href="/register" className="footer-link">
               Create Account
             </a>
