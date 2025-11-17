@@ -83,7 +83,7 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 - Reviewed design ideas and finalized Figma pages.  
 - Collaboratively reviewed data presentation and user flows for all pages.
 
-### Published Front End version Beta I Contributions 
+### Published Front End version Beta I Meetings 
 ## 📌 **Meeting 1 — November 11**
 - **Time:** 8:30 PM – 9:20 PM  
 - **Location:** Discord Call  
