@@ -100,43 +100,43 @@ export const movieTvShowData: MovieTvShow[] = [
   {
     id: 'tvshow-4',
     type: 'tvshow',
-    title: 'Breaking Bad',
-    image: '/images/breaking-bad.png',
+    title: 'Arcane',
+    image: '/images/arcane.jpg',
     description:
-      "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine in order to secure his family's future.",
-    creator: 'Vince Gilligan',
-    releaseDate: 'January 20, 2008',
-    year: '2008',
-    genre: ['Crime', 'Drama', 'Thriller'],
-    rating: 'TV-MA',
-    seasons: '5 seasons',
-    network: 'AMC',
+      'Set in the utopian region of Piltover and the oppressed underground of Zaun, the story follows the origins of two iconic League of Legends champions and the power that will tear them apart.',
+    creator: 'Christian Linke, Alex Yee',
+    releaseDate: 'November 6, 2021',
+    year: '2021',
+    genre: ['Animation', 'Action', 'Fantasy'],
+    rating: 'TV-14',
+    seasons: '2 seasons',
+    network: 'Netflix',
     cast: [
-      { actor: 'Bryan Cranston', character: 'Walter White' },
-      { actor: 'Aaron Paul', character: 'Jesse Pinkman' },
-      { actor: 'Anna Gunn', character: 'Skyler White' },
-      { actor: 'Dean Norris', character: 'Hank Schrader' }
+      { actor: 'Hailee Steinfeld', character: 'Vi' },
+      { actor: 'Ella Purnell', character: 'Jinx' },
+      { actor: 'Kevin Alejandro', character: 'Jayce' },
+      { actor: 'Katie Leung', character: 'Caitlyn' }
     ]
   },
   {
     id: 'tvshow-5',
     type: 'tvshow',
-    title: 'Stranger Things',
-    image: '/images/stranger-things.png',
+    title: "Frieren: Beyond Journey's End",
+    image: '/images/frieren.webp',
     description:
-      'When a young boy disappears, his mother, a police chief and his friends must confront terrifying supernatural forces in order to get him back.',
-    creator: 'The Duffer Brothers',
-    releaseDate: 'July 15, 2016',
-    year: '2016',
-    genre: ['Sci-fi', 'Horror', 'Drama'],
+      'After a 10-year quest to defeat the Demon King, elf mage Frieren and her companions return victorious. But their reunion is bittersweet as Frieren confronts her near-immortality and begins a new journey to understand humanity and the meaning of life.',
+    creator: 'Keiichiro Saito',
+    releaseDate: 'September 29, 2023',
+    year: '2023',
+    genre: ['Animation', 'Fantasy', 'Adventure'],
     rating: 'TV-14',
-    seasons: '4 seasons',
-    network: 'Netflix',
+    seasons: '1 season',
+    network: 'Crunchyroll',
     cast: [
-      { actor: 'Millie Bobby Brown', character: 'Eleven' },
-      { actor: 'Finn Wolfhard', character: 'Mike Wheeler' },
-      { actor: 'Winona Ryder', character: 'Joyce Byers' },
-      { actor: 'David Harbour', character: 'Jim Hopper' }
+      { actor: 'Atsumi Tanezaki', character: 'Frieren' },
+      { actor: 'Kana Ichinose', character: 'Fern' },
+      { actor: 'Chiaki Kobayashi', character: 'Stark' },
+      { actor: 'Nobuhiko Okamoto', character: 'Himmel' }
     ]
   }
 ];
