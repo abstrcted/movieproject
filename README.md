@@ -11,7 +11,7 @@ It includes links to the Web APIs our group will use, initial design mockups, an
 - **https://movieproject-liart.vercel.app/**
 
 ## 🔗 URL link to the hosted Web API Used by Our Group
-**https://tcss460-group5-credentials-api.onrender.com/api-docs/**
+- **https://tcss460-group5-credentials-api.onrender.com/api-docs/**
 
 ### **Data Web API**
 Group 4 Movie API
