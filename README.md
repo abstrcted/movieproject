@@ -5,7 +5,13 @@ This repository serves as the starting point for our Group Web API Swaps project
 It includes links to the Web APIs our group will use, initial design mockups, and documentation for the Alpha Sprint phase.
 ---
 
-## 🌐 URL link to the hosted Web APIs
+## 🌐 URL Links
+
+## URL link to the Vercel-hosted web app
+- **https://movieproject-liart.vercel.app/**
+
+## 🔗 URL link to the hosted Web API Used by Our Group
+- **https://tcss460-group5-credentials-api.onrender.com/api-docs/**
 
 ### **Data Web API**
 Group 4 Movie API
@@ -19,6 +25,7 @@ Group 5
 - **https://tcss460-group5-credentials-api.onrender.com/api-docs/**
 
 ---
+## ALL Contributions
 
 ## 🚀 Alpha Sprint Contribution
 
@@ -42,9 +49,31 @@ During the Alpha Sprint, **Primitivo, Jakita, George, and Evan** worked collabor
 
 - **George Njane** — Participated in API discussions, reviewed Figma work, and provided feedback on design usability and movie data flow.
 
+## Published Front End version Beta I Contributions 
+
+### **Primitivo Bambao**  
+Primitivo updated the Register and Login forms to fully match the 3rd-party Auth API requirements.  
+He ensured that all client-side validation rules aligned with the server-side checks enforced by the external Credentials API.  
+He also incorporated the required updates into `src/utils/authOptions.tsx` so the frontend can successfully register users through the external Auth API.
+
+### **Jakita Kaur**  
+Jakita built the **Change Password** page that becomes available after login.  
+The page includes all backend-required fields, and all client-side validation rules match server expectations.  
+This page does **not** connect to the 3rd-party API yet (as required), but the UI and validation logic are fully implemented.
+
+### **Evan Tran**  
+Evan created the **Single Movie View** and **Single TV Show View**, displaying complete mock-data information for each item.  
+Both views include titles, metadata, and images, meeting the requirement for showing all provided movie/TV details once the user is logged in.
+
+### **George Njane**  
+George developed the **Movie + TV List View** using mock data.  
+This page displays summary information and images, and allows users to navigate to Evan’s detailed pages.  
+This meets the requirement for viewing lists and accessing the full details for each individual item.
+
+
 ---
 
-## 💬 Alpha Sprint Meetings
+### ALL Meetings
 
 **Primary Form of Communication:**  
 All team members used **Discord** for calls and messages throughout the Alpha Sprint to share updates, discuss functionality, and review Figma designs.
@@ -54,11 +83,32 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 - Reviewed design ideas and finalized Figma pages.  
 - Collaboratively reviewed data presentation and user flows for all pages.
 
+### Published Front End version Beta I Meetings 
+## 📌 **Meeting 1 — November 11**
+- **Time:** 8:30 PM – 9:20 PM  
+- **Location:** Discord Call  
+- **Attendance:** Full team (Primitivo, Jakita, Evan, George)  
+- **Summary:**  
+  Assigned sprint tasks, clarified Auth API connection requirements, and reviewed mock-data page deliverables.
+
+## 📌 **Meeting 2 — November 14**
+- **Time:** 7:12 PM – 7:45 PM  
+- **Location:** Discord Call  
+- **Attendance:** Primitivo + Jakita  
+- **Summary:**  
+  Reviewed Auth API progress, synced updates to validation rules, and troubleshot adjustments in `authOptions.tsx`.
+
+
+## 📌 **Meeting 3 — November 16 (Due Date)**
+- **Time:** 9:25 AM – 10:00 AM  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  Final sprint review, last-minute fixes, validated all mock-data views, and ensured successful deployment on Vercel as required.
+
+
 ---
 
-## 🧠 Alpha Sprint Comments
+## Alpha Sprint Comments
+- None:)
 
-- The group decided to maintain close alignment between API responses and UI layouts for consistency.  
-- Future sprints will focus on integrating Figma designs into a functional frontend with API connectivity.  
-- No major blockers encountered; minor design iteration feedback was addressed quickly.  
-- All members agreed that the structure for `Discover` and `My Account` routes will be key for the next sprint.
