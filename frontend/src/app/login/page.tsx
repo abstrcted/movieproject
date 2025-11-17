@@ -16,7 +16,7 @@ export default function LoginPage() {
   const formik = useFormik({
     initialValues: {
       email: '',
-      password: '',
+      password: ''
     },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
@@ -27,7 +27,7 @@ export default function LoginPage() {
         const result = await signIn('credentials', {
           redirect: false,
           email: values.email,
-          password: values.password,
+          password: values.password
         });
 
         if (result?.error) {
@@ -43,7 +43,7 @@ export default function LoginPage() {
       } finally {
         setIsLoading(false);
       }
-    },
+    }
   });
 
   return (
@@ -74,15 +74,11 @@ export default function LoginPage() {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.email && formik.errors.email ? 'error' : ''
-              }
+              className={formik.touched.email && formik.errors.email ? 'error' : ''}
               disabled={isLoading}
               autoComplete="email"
             />
-            {formik.touched.email && formik.errors.email && (
-              <div className="error-message">{formik.errors.email}</div>
-            )}
+            {formik.touched.email && formik.errors.email && <div className="error-message">{formik.errors.email}</div>}
           </div>
 
           {/* Password Field */}
@@ -99,45 +95,26 @@ export default function LoginPage() {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={
-                  formik.touched.password && formik.errors.password
-                    ? 'error'
-                    : ''
-                }
+                className={formik.touched.password && formik.errors.password ? 'error' : ''}
                 disabled={isLoading}
                 autoComplete="current-password"
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
+              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
-            {formik.touched.password && formik.errors.password && (
-              <div className="error-message">{formik.errors.password}</div>
-            )}
+            {formik.touched.password && formik.errors.password && <div className="error-message">{formik.errors.password}</div>}
           </div>
 
           {/* Forgot Password Link */}
           <div style={{ textAlign: 'right', marginTop: '-8px' }}>
-            <a
-              href="/change-password"
-              className="footer-link"
-              style={{ fontSize: '13px' }}
-            >
+            <a href="/change-password" className="footer-link" style={{ fontSize: '13px' }}>
               Forgot Password?
             </a>
           </div>
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            className="submit-button"
-            disabled={isLoading || !formik.isValid}
-          >
+          <button type="submit" className="submit-button" disabled={isLoading || !formik.isValid}>
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>

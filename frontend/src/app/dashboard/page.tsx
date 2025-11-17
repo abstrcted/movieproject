@@ -15,12 +15,12 @@ export default function DashboardPage() {
       try {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
-        
+
         if (!session || !session.user) {
           router.push('/login');
           return;
         }
-        
+
         setUserName(session.user.name || session.user.email || 'User');
         setIsLoading(false);
       } catch (error) {

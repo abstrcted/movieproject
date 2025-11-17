@@ -1,16 +1,14 @@
-"use client";
+'use client';
 
-import { MovieTvShow, movieTvShowData } from "@/types/data/movieTvShowData";
-import MovieTvShowCard from "./MovieTvShowCard";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useState } from "react";
+import { MovieTvShow, movieTvShowData } from '@/types/data/movieTvShowData';
+import MovieTvShowCard from './MovieTvShowCard';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { useState } from 'react';
 
 function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
   return (
     <div className="flex flex-col gap-6 mb-8 md:mb-12">
-      <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-white">
-        Movies &amp; TV Shows
-      </h1>
+      <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-white">Movies &amp; TV Shows</h1>
 
       {/* Search Bar */}
       <div className="relative max-w-2xl w-full">
@@ -33,14 +31,10 @@ function getMoviesGrid(movies: MovieTvShow[], searchQuery: string) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
       {movies.length > 0 ? (
-        movies.map((movie: MovieTvShow) => (
-          <MovieTvShowCard key={movie.id} movie={movie} />
-        ))
+        movies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
       ) : (
         <div className="col-span-full text-center py-20">
-          <p className="text-gray-400 text-lg">
-            No movies found matching &quot;{searchQuery}&quot;
-          </p>
+          <p className="text-gray-400 text-lg">No movies found matching &quot;{searchQuery}&quot;</p>
         </div>
       )}
     </div>
@@ -50,7 +44,7 @@ function getMoviesGrid(movies: MovieTvShow[], searchQuery: string) {
 const MovieShowsBrowse = () => {
   const ITEMS_PER_PAGE = 20;
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -67,9 +61,7 @@ const MovieShowsBrowse = () => {
     handlePageChange(currentPage - 1);
   };
 
-  const filteredMovies = movieTvShowData.filter((movie) =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMovies = movieTvShowData.filter((movie) => movie.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const paginatedMovies = filteredMovies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
@@ -84,13 +76,15 @@ const MovieShowsBrowse = () => {
           <div className="flex justify-between text-[#878787]">
             <h1 className="text-sm font-normal">Showing {filteredMovies.length} results</h1>
             <div className="flex gap-px items-center">
-              <p>Page {currentPage} of {totalPages}</p>
+              <p>
+                Page {currentPage} of {totalPages}
+              </p>
               <button
                 type="button"
                 onClick={goPreviousPage}
                 disabled={currentPage === 1}
                 aria-label="Previous Page"
-                className={`hover:scale-110 hover:text-white/60 ${currentPage === 1 ? "hidden" : ""}`}
+                className={`hover:scale-110 hover:text-white/60 ${currentPage === 1 ? 'hidden' : ''}`}
               >
                 <ChevronLeft size={24} />
               </button>
@@ -99,7 +93,7 @@ const MovieShowsBrowse = () => {
                 onClick={goNextPage}
                 disabled={currentPage === totalPages}
                 aria-label="Next Page"
-                className={`hover:scale-110 hover:text-white/60 ${currentPage === totalPages ? "hidden" : ""}`}
+                className={`hover:scale-110 hover:text-white/60 ${currentPage === totalPages ? 'hidden' : ''}`}
               >
                 <ChevronRight size={24} />
               </button>

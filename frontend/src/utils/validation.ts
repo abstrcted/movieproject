@@ -35,10 +35,7 @@ export const registerSchema = Yup.object({
     .max(100, 'Email must be less than 100 characters'),
   username: Yup.string()
     .required('Username is required')
-    .matches(
-      USERNAME_REGEX,
-      'Username must be 3-20 characters, start with a letter, and contain only letters, numbers, and underscores'
-    )
+    .matches(USERNAME_REGEX, 'Username must be 3-20 characters, start with a letter, and contain only letters, numbers, and underscores')
     .min(3, 'Username must be at least 3 characters')
     .max(20, 'Username must be less than 20 characters'),
   password: Yup.string()
@@ -62,25 +59,23 @@ export const registerSchema = Yup.object({
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^\d{10}$/, 'Phone number must be exactly 10 digits (e.g., 2065551234)')
-    .length(10, 'Phone number must be exactly 10 digits'),
+    .length(10, 'Phone number must be exactly 10 digits')
 });
 
 /**
  * Login form validation schema
  */
 export const loginSchema = Yup.object({
-  email: Yup.string()
-    .required('Email is required')
-    .matches(EMAIL_REGEX, 'Please enter a valid email address'),
-  password: Yup.string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters'),
+  email: Yup.string().required('Email is required').matches(EMAIL_REGEX, 'Please enter a valid email address'),
+  password: Yup.string().required('Password is required').min(8, 'Password must be at least 8 characters')
 });
 
 /**
  * Validate password strength
  */
-export const validatePasswordStrength = (password: string): {
+export const validatePasswordStrength = (
+  password: string
+): {
   score: number;
   feedback: string[];
 } => {

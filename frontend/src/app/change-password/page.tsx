@@ -171,11 +171,7 @@ export default function ChangePasswordPage() {
       </div>
 
       <div className="right-side">
-        <img
-          src="/IMG1forgetpassword.png"
-          alt="People enjoying movies"
-          className="side-image"
-        />
+        <img src="/IMG1forgetpassword.png" alt="People enjoying movies" className="side-image" />
       </div>
     </div>
   );

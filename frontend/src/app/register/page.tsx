@@ -24,7 +24,7 @@ export default function RegisterPage() {
       confirmPassword: '',
       firstname: '',
       lastname: '',
-      phone: '',
+      phone: ''
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
@@ -39,15 +39,13 @@ export default function RegisterPage() {
           password: values.password,
           firstname: values.firstname,
           lastname: values.lastname,
-          phone: values.phone,
+          phone: values.phone
         };
 
         const response = await registerUser(credentials);
 
         if (response.success) {
-          setSuccessMessage(
-            'Registration successful! Redirecting to login...'
-          );
+          setSuccessMessage('Registration successful! Redirecting to login...');
           setTimeout(() => {
             router.push('/login');
           }, 2000);
@@ -59,7 +57,7 @@ export default function RegisterPage() {
       } finally {
         setIsLoading(false);
       }
-    },
+    }
   });
 
   const passwordStrength = validatePasswordStrength(formik.values.password);
@@ -98,14 +96,10 @@ export default function RegisterPage() {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.email && formik.errors.email ? 'error' : ''
-              }
+              className={formik.touched.email && formik.errors.email ? 'error' : ''}
               disabled={isLoading}
             />
-            {formik.touched.email && formik.errors.email && (
-              <div className="error-message">{formik.errors.email}</div>
-            )}
+            {formik.touched.email && formik.errors.email && <div className="error-message">{formik.errors.email}</div>}
           </div>
 
           {/* Username Field */}
@@ -121,17 +115,11 @@ export default function RegisterPage() {
               value={formik.values.username}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.username && formik.errors.username ? 'error' : ''
-              }
+              className={formik.touched.username && formik.errors.username ? 'error' : ''}
               disabled={isLoading}
             />
-            {formik.touched.username && formik.errors.username && (
-              <div className="error-message">{formik.errors.username}</div>
-            )}
-            <div className="field-hint">
-              3-20 characters, start with a letter, letters/numbers/underscores only
-            </div>
+            {formik.touched.username && formik.errors.username && <div className="error-message">{formik.errors.username}</div>}
+            <div className="field-hint">3-20 characters, start with a letter, letters/numbers/underscores only</div>
           </div>
 
           {/* First Name Field */}
@@ -147,14 +135,10 @@ export default function RegisterPage() {
               value={formik.values.firstname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.firstname && formik.errors.firstname ? 'error' : ''
-              }
+              className={formik.touched.firstname && formik.errors.firstname ? 'error' : ''}
               disabled={isLoading}
             />
-            {formik.touched.firstname && formik.errors.firstname && (
-              <div className="error-message">{formik.errors.firstname}</div>
-            )}
+            {formik.touched.firstname && formik.errors.firstname && <div className="error-message">{formik.errors.firstname}</div>}
           </div>
 
           {/* Last Name Field */}
@@ -170,14 +154,10 @@ export default function RegisterPage() {
               value={formik.values.lastname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.lastname && formik.errors.lastname ? 'error' : ''
-              }
+              className={formik.touched.lastname && formik.errors.lastname ? 'error' : ''}
               disabled={isLoading}
             />
-            {formik.touched.lastname && formik.errors.lastname && (
-              <div className="error-message">{formik.errors.lastname}</div>
-            )}
+            {formik.touched.lastname && formik.errors.lastname && <div className="error-message">{formik.errors.lastname}</div>}
           </div>
 
           {/* Phone Field */}
@@ -193,18 +173,12 @@ export default function RegisterPage() {
               value={formik.values.phone}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={
-                formik.touched.phone && formik.errors.phone ? 'error' : ''
-              }
+              className={formik.touched.phone && formik.errors.phone ? 'error' : ''}
               disabled={isLoading}
               maxLength={10}
             />
-            {formik.touched.phone && formik.errors.phone && (
-              <div className="error-message">{formik.errors.phone}</div>
-            )}
-            <div className="field-hint">
-              Enter 10 digits without spaces or dashes
-            </div>
+            {formik.touched.phone && formik.errors.phone && <div className="error-message">{formik.errors.phone}</div>}
+            <div className="field-hint">Enter 10 digits without spaces or dashes</div>
           </div>
 
           {/* Password Field */}
@@ -221,23 +195,14 @@ export default function RegisterPage() {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={
-                  formik.touched.password && formik.errors.password ? 'error' : ''
-                }
+                className={formik.touched.password && formik.errors.password ? 'error' : ''}
                 disabled={isLoading}
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
+              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
-            {formik.touched.password && formik.errors.password && (
-              <div className="error-message">{formik.errors.password}</div>
-            )}
+            {formik.touched.password && formik.errors.password && <div className="error-message">{formik.errors.password}</div>}
             {formik.values.password && (
               <div className="password-strength">
                 <div className="strength-bar">
@@ -247,9 +212,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 {passwordStrength.feedback.length > 0 && (
-                  <div className="strength-feedback">
-                    Required: {passwordStrength.feedback.join(', ')}
-                  </div>
+                  <div className="strength-feedback">Required: {passwordStrength.feedback.join(', ')}</div>
                 )}
               </div>
             )}
@@ -269,19 +232,10 @@ export default function RegisterPage() {
                 value={formik.values.confirmPassword}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={
-                  formik.touched.confirmPassword && formik.errors.confirmPassword
-                    ? 'error'
-                    : ''
-                }
+                className={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'error' : ''}
                 disabled={isLoading}
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex={-1}
-              >
+              <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex={-1}>
                 {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
@@ -291,11 +245,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            className="submit-button"
-            disabled={isLoading || !formik.isValid}
-          >
+          <button type="submit" className="submit-button" disabled={isLoading || !formik.isValid}>
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
