@@ -3,7 +3,7 @@ import MovieShowsBrowse from '@/components/MovieShowsBrowse';
 const BrowsePage = () => {
   return (
     <div>
-        <MovieShowsBrowse />
+      <MovieShowsBrowse />
     </div>
   );
 };

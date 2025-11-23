@@ -15,9 +15,9 @@ if (isDev) {
 const credentialsApi = axios.create({
   baseURL: CREDENTIALS_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
-  timeout: 10000,
+  timeout: 10000
 });
 
 // Add request interceptor for logging
@@ -46,7 +46,14 @@ credentialsApi.interceptors.response.use(
  */
 export const registerUser = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
   try {
+<<<<<<< HEAD
     if (isDev) console.log('[Credentials API] Registering user:', { email: credentials.email, username: credentials.username });
+=======
+    console.log('[Credentials API] Registering user:', {
+      email: credentials.email,
+      username: credentials.username
+    });
+>>>>>>> origin/credentials-features
     const response = await credentialsApi.post('/auth/register', credentials);
     if (isDev) console.log('[Credentials API] Registration response:', response.data);
     return response.data;
@@ -58,12 +65,12 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
         data: error.response?.data,
         message: error.message
       });
-      
+
       if (error.response) {
         return {
           success: false,
           message: error.response.data?.message || error.response.data?.error || 'Registration failed',
-          error: error.response.data?.details || error.response.statusText || 'Unknown error',
+          error: error.response.data?.details || error.response.statusText || 'Unknown error'
         };
       }
     }
@@ -71,7 +78,7 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
     return {
       success: false,
       message: 'Network error',
-      error: 'Could not connect to authentication service',
+      error: 'Could not connect to authentication service'
     };
   }
 };
@@ -82,7 +89,13 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
  */
 export const loginUser = async (credentials: LoginCredentials): Promise<AuthResponse> => {
   try {
+<<<<<<< HEAD
     if (isDev) console.log('[Credentials API] Logging in user:', { email: credentials.email });
+=======
+    console.log('[Credentials API] Logging in user:', {
+      email: credentials.email
+    });
+>>>>>>> origin/credentials-features
     const response = await credentialsApi.post('/auth/login', credentials);
     if (isDev) console.log('[Credentials API] Login response:', response.data);
     return response.data;
@@ -94,12 +107,12 @@ export const loginUser = async (credentials: LoginCredentials): Promise<AuthResp
         data: error.response?.data,
         message: error.message
       });
-      
+
       if (error.response) {
         return {
           success: false,
           message: error.response.data?.message || error.response.data?.error || 'Login failed',
-          error: error.response.data?.details || error.response.statusText || 'Invalid credentials',
+          error: error.response.data?.details || error.response.statusText || 'Invalid credentials'
         };
       }
     }
@@ -107,7 +120,7 @@ export const loginUser = async (credentials: LoginCredentials): Promise<AuthResp
     return {
       success: false,
       message: 'Network error',
-      error: 'Could not connect to authentication service',
+      error: 'Could not connect to authentication service'
     };
   }
 };
@@ -125,13 +138,13 @@ export const verifyToken = async (token: string): Promise<AuthResponse> => {
       return {
         success: false,
         message: 'Token verification failed',
-        error: error.response.data.error || 'Invalid token',
+        error: error.response.data.error || 'Invalid token'
       };
     }
     return {
       success: false,
       message: 'Network error',
-      error: 'Could not verify token',
+      error: 'Could not verify token'
     };
   }
 };
@@ -147,9 +160,9 @@ export const verifyToken = async (token: string): Promise<AuthResponse> => {
  */
 export const requestPasswordReset = async (payload: { email: string }): Promise<AuthResponse> => {
   try {
-    console.log('[Credentials API] Requesting password reset for:', payload.email);
+    if (isDev) console.log('[Credentials API] Requesting password reset for:', payload.email);
     const response = await credentialsApi.post('/auth/password/reset-request', payload);
-    console.log('[Credentials API] Reset-request response:', response.data);
+    if (isDev) console.log('[Credentials API] Reset-request response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -184,9 +197,9 @@ export const requestPasswordReset = async (payload: { email: string }): Promise<
  */
 export const confirmPasswordReset = async (payload: { token: string; password: string }): Promise<AuthResponse> => {
   try {
-    console.log('[Credentials API] Confirming password reset with token:', payload.token ? 'present' : 'missing');
+    if (isDev) console.log('[Credentials API] Confirming password reset with token:', payload.token ? 'present' : 'missing');
     const response = await credentialsApi.post('/auth/password/reset', payload);
-    console.log('[Credentials API] Reset-confirm response:', response.data);
+    if (isDev) console.log('[Credentials API] Reset-confirm response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

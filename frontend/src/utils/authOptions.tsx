@@ -16,13 +16,13 @@ export const authOptions: NextAuthOptions = {
         email: {
           label: 'Email',
           type: 'email',
-          placeholder: 'Enter your email',
+          placeholder: 'Enter your email'
         },
         password: {
           label: 'Password',
           type: 'password',
-          placeholder: 'Enter your password',
-        },
+          placeholder: 'Enter your password'
+        }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           // Call the credentials API
           const response = await loginUser({
             email: credentials.email,
-            password: credentials.password,
+            password: credentials.password
           });
 
           if (response.success && response.data) {
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
               name: response.data.user.username,
               username: response.data.user.username,
               token: response.data.token,
-              role: response.data.user.role,
+              role: response.data.user.role
             };
           } else {
             throw new Error(response.message || 'Authentication failed');
@@ -53,8 +53,8 @@ export const authOptions: NextAuthOptions = {
           console.error('[NextAuth] Authentication error:', error);
           throw new Error(error.message || 'Authentication failed');
         }
-      },
-    }),
+      }
+    })
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // Send properties to the client
       if (token && session.user) {
-        const user = session.user as any;  // <-- cast once
+        const user = session.user as any; // <-- cast once
 
         user.id = token.id as string;
         user.email = token.email as string;
@@ -86,15 +86,15 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: '/login',
-    error: '/login',
+    error: '/login'
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET_KEY,
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development'
 };
