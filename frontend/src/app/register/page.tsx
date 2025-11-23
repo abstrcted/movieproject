@@ -307,6 +307,9 @@ export default function RegisterPage() {
               Sign In
             </a>
           </p>
+          <p style={{ marginTop: '6px' }}>
+            <a href="/change-password" className="footer-link">Forgot Password?</a>
+          </p>
         </div>
       </div>
     </div>

@@ -2,7 +2,14 @@
 import axios, { AxiosError } from 'axios';
 import type { RegisterCredentials, LoginCredentials, AuthResponse } from '@/types/auth';
 
-const CREDENTIALS_API_URL = process.env.CREDENTIALS_API_URL || 'https://tcss460-group5-credentials-api.onrender.com';
+// Prefer NEXT_PUBLIC_ variant so the value is available in the browser bundle.
+const CREDENTIALS_API_URL =
+  process.env.NEXT_PUBLIC_CREDENTIALS_API_URL || process.env.CREDENTIALS_API_URL || 'https://tcss460-group5-credentials-api.onrender.com';
+
+const isDev = process.env.NODE_ENV === 'development';
+if (isDev) {
+  console.log('[Credentials API] Base URL:', CREDENTIALS_API_URL);
+}
 
 // Create axios instance with default config
 const credentialsApi = axios.create({
@@ -16,7 +23,7 @@ const credentialsApi = axios.create({
 // Add request interceptor for logging
 credentialsApi.interceptors.request.use(
   (config) => {
-    console.log(`[Credentials API] ${config.method?.toUpperCase()} ${config.url}`);
+    if (isDev) console.log(`[Credentials API] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -28,7 +35,7 @@ credentialsApi.interceptors.request.use(
 credentialsApi.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    console.error('[Credentials API Error]:', error.response?.data || error.message);
+    if (isDev) console.error('[Credentials API Error]:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
@@ -39,16 +46,13 @@ credentialsApi.interceptors.response.use(
  */
 export const registerUser = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
   try {
-    console.log('[Credentials API] Registering user:', { 
-      email: credentials.email, 
-      username: credentials.username 
-    });
+    if (isDev) console.log('[Credentials API] Registering user:', { email: credentials.email, username: credentials.username });
     const response = await credentialsApi.post('/auth/register', credentials);
-    console.log('[Credentials API] Registration response:', response.data);
+    if (isDev) console.log('[Credentials API] Registration response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('[Credentials API] Registration error details:', {
+      if (isDev) console.error('[Credentials API] Registration error details:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -63,7 +67,7 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
         };
       }
     }
-    console.error('[Credentials API] Unexpected error:', error);
+    if (isDev) console.error('[Credentials API] Unexpected error:', error);
     return {
       success: false,
       message: 'Network error',
@@ -78,15 +82,13 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
  */
 export const loginUser = async (credentials: LoginCredentials): Promise<AuthResponse> => {
   try {
-    console.log('[Credentials API] Logging in user:', { 
-      email: credentials.email 
-    });
+    if (isDev) console.log('[Credentials API] Logging in user:', { email: credentials.email });
     const response = await credentialsApi.post('/auth/login', credentials);
-    console.log('[Credentials API] Login response:', response.data);
+    if (isDev) console.log('[Credentials API] Login response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('[Credentials API] Login error details:', {
+      if (isDev) console.error('[Credentials API] Login error details:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -101,7 +103,7 @@ export const loginUser = async (credentials: LoginCredentials): Promise<AuthResp
         };
       }
     }
-    console.error('[Credentials API] Unexpected error:', error);
+    if (isDev) console.error('[Credentials API] Unexpected error:', error);
     return {
       success: false,
       message: 'Network error',
@@ -130,6 +132,84 @@ export const verifyToken = async (token: string): Promise<AuthResponse> => {
       success: false,
       message: 'Network error',
       error: 'Could not verify token',
+    };
+  }
+};
+
+/**
+ * Reset / change password
+ * POST /auth/forgot-password
+ */
+/**
+ * Request password reset email
+ * POST /auth/password/reset-request
+ * Body: { email }
+ */
+export const requestPasswordReset = async (payload: { email: string }): Promise<AuthResponse> => {
+  try {
+    console.log('[Credentials API] Requesting password reset for:', payload.email);
+    const response = await credentialsApi.post('/auth/password/reset-request', payload);
+    console.log('[Credentials API] Reset-request response:', response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Credentials API] Reset-request error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      if (error.response) {
+        return {
+          success: false,
+          message: error.response.data?.message || error.response.data?.error || 'Password reset request failed',
+          error: error.response.data?.details || error.response.statusText || 'Unknown error'
+        };
+      }
+    }
+    console.error('[Credentials API] Unexpected error:', error);
+    return {
+      success: false,
+      message: 'Network error',
+      error: 'Could not connect to authentication service'
+    };
+  }
+};
+
+/**
+ * Confirm password reset using token sent by email
+ * POST /auth/password/reset
+ * Body: { token, password }
+ */
+export const confirmPasswordReset = async (payload: { token: string; password: string }): Promise<AuthResponse> => {
+  try {
+    console.log('[Credentials API] Confirming password reset with token:', payload.token ? 'present' : 'missing');
+    const response = await credentialsApi.post('/auth/password/reset', payload);
+    console.log('[Credentials API] Reset-confirm response:', response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Credentials API] Reset-confirm error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      if (error.response) {
+        return {
+          success: false,
+          message: error.response.data?.message || error.response.data?.error || 'Password reset failed',
+          error: error.response.data?.details || error.response.statusText || 'Unknown error'
+        };
+      }
+    }
+    console.error('[Credentials API] Unexpected error:', error);
+    return {
+      success: false,
+      message: 'Network error',
+      error: 'Could not connect to authentication service'
     };
   }
 };
