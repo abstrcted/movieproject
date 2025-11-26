@@ -1,3 +1,6 @@
+import { Movie } from '@/services/moviesApi';
+import { TVShow } from '@/services/tvShowsApi';
+
 export type CastMember = {
   actor: string;
   character: string;
@@ -21,6 +24,74 @@ export type MovieTvShow = {
   network?: string;
   boxOffice?: string;
   cast: CastMember[];
+};
+
+// Utility functions to normalize API responses to MovieTvShow format
+
+export const normalizeMovie = (movie: Movie): MovieTvShow => {
+  const movieId = movie.movie_id || movie.id;
+  const releaseDate = movie.releaseDate || movie.release_date || '';
+  const runtime = movie.runtime_in_minutes || movie.runtime;
+  const mpaRating = movie.mpa_rating || movie.rating || '';
+  const description = movie.overview || movie.description || '';
+  const genres = movie.genres || movie.genre || [];
+
+  // Handle poster URL - API returns path like "/7WfAuzUtztPJ9rDEzmjx0I4NIDw.jpg"
+  let imageUrl = 'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster';
+
+  const posterPath = movie.poster_url || movie.posterUrl;
+  const backdropPath = movie.backdrop_url || movie.backdropUrl;
+
+  if (posterPath && posterPath.startsWith('/')) {
+    // Prepend TMDB base URL
+    imageUrl = `https://image.tmdb.org/t/p/w500${posterPath}`;
+  } else if (backdropPath && backdropPath.startsWith('/')) {
+    imageUrl = `https://image.tmdb.org/t/p/w500${backdropPath}`;
+  } else if (posterPath) {
+    // Already a full URL
+    imageUrl = posterPath;
+  }
+
+  return {
+    id: String(movieId),
+    type: 'movie',
+    title: movie.title || '',
+    image: imageUrl,
+    description: description,
+    director: movie.director,
+    releaseDate: releaseDate,
+    year: movie.year ? String(movie.year) : '',
+    genre: Array.isArray(genres) ? genres : [],
+    rating: mpaRating,
+    duration: runtime ? `${runtime} minutes` : undefined,
+    studio: movie.studio,
+    boxOffice: movie.boxOffice,
+    cast: movie.cast?.map(c => ({
+      actor: c.name,
+      character: c.character
+    })) || []
+  };
+};
+
+export const normalizeTVShow = (show: TVShow): MovieTvShow => {
+  return {
+    id: String(show.iD || show.id),
+    type: 'tvshow',
+    title: show.name || show.title || '',
+    image: show.posterURL || show.posterUrl || show.backdropURL || show.backdropUrl || 'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster',
+    description: show.overview || show.description || '',
+    creator: Array.isArray(show.creators) ? show.creators.join(', ') : show.creator,
+    releaseDate: show.firstAirDate || show.releaseDate || '',
+    year: show.firstAirDate ? new Date(show.firstAirDate).getFullYear().toString() : show.year || '',
+    genre: Array.isArray(show.genres) ? show.genres : show.genre || [],
+    rating: show.rating || (show.tMDbRating ? `${show.tMDbRating}/10` : ''),
+    seasons: show.seasons ? `${show.seasons} season${Number(show.seasons) > 1 ? 's' : ''}` : undefined,
+    network: show.networks || show.network,
+    cast: show.cast?.map(c => ({
+      actor: c.name,
+      character: c.character
+    })) || []
+  };
 };
 
 export const movieTvShowData: MovieTvShow[] = [

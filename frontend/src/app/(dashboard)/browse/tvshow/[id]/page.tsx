@@ -1,18 +1,52 @@
 'use client';
 
-import { movieTvShowData } from '@/types/data/movieTvShowData';
+import { MovieTvShow, normalizeTVShow } from '@/types/data/movieTvShowData';
 import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { getTVShowById } from '@/services/tvShowsApi';
 
 const TvShowDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
   const [showAllCast, setShowAllCast] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [tvShow, setTvShow] = useState<MovieTvShow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
 
-  // Find the TV show by ID
-  const tvShow = movieTvShowData.find((item) => item.id === id && item.type === 'tvshow');
+  const token = (session?.user as any)?.accessToken;
+
+  useEffect(() => {
+    const fetchTVShow = async () => {
+      setLoading(true);
+      try {
+        const tvShowData = await getTVShowById(id, token);
+        if (tvShowData) {
+          setTvShow(normalizeTVShow(tvShowData));
+        } else {
+          setTvShow(null);
+        }
+      } catch (error) {
+        console.error('Error fetching TV show:', error);
+        setTvShow(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTVShow();
+  }, [id, token]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1B1A1A] flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   // If TV show not found, show 404
   if (!tvShow) {

@@ -1,9 +1,12 @@
 'use client';
 
-import { MovieTvShow, movieTvShowData } from '@/types/data/movieTvShowData';
+import { MovieTvShow, normalizeMovie, normalizeTVShow } from '@/types/data/movieTvShowData';
 import MovieTvShowCard from './MovieTvShowCard';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { getMovies, searchMovies } from '@/services/moviesApi';
+import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
 
 function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
   return (
@@ -45,12 +48,61 @@ const MovieShowsBrowse = () => {
   const ITEMS_PER_PAGE = 20;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [allMoviesShows, setAllMoviesShows] = useState<MovieTvShow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  const token = (session?.user as any)?.accessToken;
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch data when search query changes
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [moviesResponse, tvShowsResponse] = await Promise.all([
+          debouncedSearchQuery ? searchMovies(debouncedSearchQuery, token) : getMovies({ token }),
+          debouncedSearchQuery ? searchTVShows(debouncedSearchQuery, token) : getTVShows({ token })
+        ]);
+
+        const normalizedMovies = (moviesResponse.data || []).map(normalizeMovie);
+        const normalizedTVShows = (tvShowsResponse.data || []).map(normalizeTVShow);
+
+        const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        setAllMoviesShows(combined);
+      } catch (error) {
+        console.error('Error fetching movies and TV shows:', error);
+        setAllMoviesShows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [debouncedSearchQuery, token]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const totalPages = Math.ceil(movieTvShowData.length / ITEMS_PER_PAGE);
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
+
+  const totalPages = Math.ceil(allMoviesShows.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
   const goNextPage = () => {
@@ -61,9 +113,7 @@ const MovieShowsBrowse = () => {
     handlePageChange(currentPage - 1);
   };
 
-  const filteredMovies = movieTvShowData.filter((movie) => movie.title.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const paginatedMovies = filteredMovies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedMovies = allMoviesShows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <section className="w-full min-h-screen bg-[#1B1A1A] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 md:py-12">
@@ -71,11 +121,22 @@ const MovieShowsBrowse = () => {
         {/* Header Section */}
         {getHeader(searchQuery, setSearchQuery)}
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-white text-lg">Loading...</div>
+          </div>
+        )}
+
         {/* Pagination */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between text-[#878787]">
-            <h1 className="text-sm font-normal">Showing {filteredMovies.length} results</h1>
-            <div className="flex gap-px items-center">
+        {!loading && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between text-[#878787]">
+              <h1 className="text-sm font-normal">
+                Showing {allMoviesShows.length} result{allMoviesShows.length !== 1 ? 's' : ''}
+                {debouncedSearchQuery && ` for "${debouncedSearchQuery}"`}
+              </h1>
+              <div className="flex gap-px items-center">
               <p>
                 Page {currentPage} of {totalPages}
               </p>
@@ -100,9 +161,10 @@ const MovieShowsBrowse = () => {
             </div>
           </div>
 
-          {/* Movies Grid */}
-          {getMoviesGrid(paginatedMovies, searchQuery)}
-        </div>
+            {/* Movies Grid */}
+            {getMoviesGrid(paginatedMovies, searchQuery)}
+          </div>
+        )}
       </div>
     </section>
   );

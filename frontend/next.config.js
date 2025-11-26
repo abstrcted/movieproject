@@ -14,6 +14,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
         pathname: '**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+        pathname: '**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        pathname: '**'
       }
     ]
   },
@@ -25,6 +35,9 @@ const nextConfig = {
     MESSAGES_WEB_API_URL: process.env.MESSAGES_WEB_API_URL,
     MESSAGES_WEB_API_KEY: process.env.MESSAGES_WEB_API_KEY,
     CREDENTIALS_API_URL: process.env.CREDENTIALS_API_URL,
+    MOVIES_API_URL: process.env.MOVIES_API_URL,
+    MOVIES_API_KEY: process.env.MOVIES_API_KEY,
+    TV_API_URL: process.env.TV_API_URL,
     NEXT_APP_JWT_SECRET: process.env.REACT_APP_JWT_SECRET,
     NEXT_APP_JWT_TIMEOUT: process.env.REACT_APP_JWT_TIMEOUT,
     NEXT_APP_GOOGLE_MAPS_API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
