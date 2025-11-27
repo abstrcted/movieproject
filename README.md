@@ -70,6 +70,31 @@ George developed the **Movie + TV List View** using mock data.
 This page displays summary information and images, and allows users to navigate to Evan’s detailed pages.  
 This meets the requirement for viewing lists and accessing the full details for each individual item.
 
+## Published Front End version Beta II Contributions
+
+### **Primitivo Bambao** 
+Primitivo completed the full implementation of the Change Password feature.
+For this sprint, he connected the entire Change Password workflow to the 3rd-party Credentials Auth API, ensuring successful requests, error-handling, and response validation.
+He function-tested the UI, cleaned the styling for improved UX, and helped verify that user authentication routes correctly integrate with the external API.
+
+### **Jakita Kaur**  
+Jakita fixed all major bugs from our own web api. For this sprint, she designed the full UI/UX for the Delete Movie and Delete Show feature.
+This requirement was design-only (not implemented), so she focused on user flow, confirmation modal styling, and accessibility.
+She also updated and organized the project README.md for Beta II, ensuring all sprint requirements, contributions, and meeting logs are documented properly.
+
+### **Evan Tran**  
+Evan implemented all views related to searching Movies and TV Shows using the live data returned by the 3rd-party Movie & TV APIs.
+He connected the search bar + filters directly to the real endpoints and used our List component from last sprint to display results.
+He also built and finalized the pages for: Viewing Movie Lists, Viewing TV Show Lists, Viewing a single Movie, Viewing a single TV Show
+He function-tested all UI, improved layouts, and ensured the pages respond properly to authentication and API data.
+
+### **George Njane**  
+George built the UI for the Create New Movie & Create New Show page.
+He created the full form with all required fields (title, description, release date, genres, image requirements, etc.).
+This page was not required to integrate with the real Web API this sprint, but he prepared the structure in case the team chooses to connect it in the future. 
+George also designed and implemented our team’s major creative feature: the Watchlist.
+This included UI/UX planning, the add/remove interactions, and state updates to support a personalized list for logged-in users.
+
 
 ---
 
@@ -106,6 +131,29 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 - **Summary:**  
   Final sprint review, last-minute fixes, validated all mock-data views, and ensured successful deployment on Vercel as required.
 
+### Published Front End version Beta II Meetings
+📌 **Meeting — November 20**
+- **Time:** 8:10 PM – 8:52 PM  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  We discussed our time constraints due to Thanksgiving break, planned deadlines for each task, and divided all sprint work. We also confirmed the
+  integration order for connecting the 3rd-party APIs.
+
+📌 **Meeting — November 25**
+- **Time:** 6:30 PM – 7:15 PM  
+- **Location:** Discord Call  
+- **Attendance:** Jakita, Primitivo, Evan  
+- **Summary:**  
+  Reviewed progress on all API-connected features, checked routing and UI consistency, and discussed what remaining work was needed to complete the sprint.
+
+📌 **Meeting — November 30**
+- **Time:** 10:20 AM – 10:45 AM  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  Final sprint wrap-up, verified all Beta II requirements were completed, tested all major pages, finalized the Watchlist feature, and
+  updated the README before submission.
 
 ---
 
