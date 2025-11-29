@@ -46,25 +46,20 @@ credentialsApi.interceptors.response.use(
  */
 export const registerUser = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
   try {
-<<<<<<< HEAD
     if (isDev) console.log('[Credentials API] Registering user:', { email: credentials.email, username: credentials.username });
-=======
-    console.log('[Credentials API] Registering user:', {
-      email: credentials.email,
-      username: credentials.username
-    });
->>>>>>> origin/credentials-features
     const response = await credentialsApi.post('/auth/register', credentials);
     if (isDev) console.log('[Credentials API] Registration response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      if (isDev) console.error('[Credentials API] Registration error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+      if (isDev) {
+        console.error('[Credentials API] Registration error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
 
       if (error.response) {
         return {
@@ -89,24 +84,20 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Au
  */
 export const loginUser = async (credentials: LoginCredentials): Promise<AuthResponse> => {
   try {
-<<<<<<< HEAD
     if (isDev) console.log('[Credentials API] Logging in user:', { email: credentials.email });
-=======
-    console.log('[Credentials API] Logging in user:', {
-      email: credentials.email
-    });
->>>>>>> origin/credentials-features
     const response = await credentialsApi.post('/auth/login', credentials);
     if (isDev) console.log('[Credentials API] Login response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      if (isDev) console.error('[Credentials API] Login error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+      if (isDev) {
+        console.error('[Credentials API] Login error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
 
       if (error.response) {
         return {
@@ -166,12 +157,14 @@ export const requestPasswordReset = async (payload: { email: string }): Promise<
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('[Credentials API] Reset-request error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+      if (isDev) {
+        console.error('[Credentials API] Reset-request error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
 
       if (error.response) {
         return {
@@ -203,12 +196,14 @@ export const confirmPasswordReset = async (payload: { token: string; password: s
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('[Credentials API] Reset-confirm error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+      if (isDev) {
+        console.error('[Credentials API] Reset-confirm error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
 
       if (error.response) {
         return {

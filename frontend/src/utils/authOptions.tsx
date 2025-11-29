@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
         user.role = token.role;
       }
       return session;
-    },
+    }
   },
 
   pages: {
