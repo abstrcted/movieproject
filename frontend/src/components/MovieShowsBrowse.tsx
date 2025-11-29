@@ -9,60 +9,79 @@ import { getMovies, searchMovies } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
 import Link from 'next/link';
 
+/**
+ * Renders the hero section with title, search bar, and action buttons
+ */
 function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
   return (
-    <div className="flex flex-col gap-6 mb-8 md:mb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-white">Movies &amp; TV Shows</h1>
-
-        {/* Create Buttons */}
-        <div className="flex gap-3">
-          <Link
-            href="/browse/movie/new"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
-          >
-            <Plus className="w-5 h-5" />
-            <Film className="w-5 h-5" />
-            <span className="hidden sm:inline">Add Movie</span>
-          </Link>
-          <Link
-            href="/browse/tvshow/new"
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors duration-200"
-          >
-            <Plus className="w-5 h-5" />
-            <Tv className="w-5 h-5" />
-            <span className="hidden sm:inline">Add TV Show</span>
-          </Link>
-        </div>
+    <div className="relative w-full h-[500px] flex flex-col justify-center">
+      {/* Background Image with Fade Overlay */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url('https://www.wallpaperflare.com/static/436/228/997/movies-mad-max-the-dark-knight-interstellar-movie-wallpaper.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 20%'
+        }}
+      >
+        {/* Gradient: Darkens top, and fades bottom into the page background color (#1B1A1A) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#1B1A1A]"></div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-2xl w-full">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-          <Search size={24} className="text-gray-400" />
-        </div>
-        <input
-          type="text"
-          placeholder="Search movies and TV shows..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full pl-14 pr-6 py-3 md:py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all"
-        />
-      </div>
-    </div>
-  );
-}
+      {/* Content Overlay */}
+      <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h1 className="text-5xl font-bold text-white tracking-wide drop-shadow-lg">Explore</h1>
 
-function getMoviesGrid(movies: MovieTvShow[], searchQuery: string) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-      {movies.length > 0 ? (
-        movies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
-      ) : (
-        <div className="col-span-full text-center py-20">
-          <p className="text-gray-400 text-lg">No movies found matching &quot;{searchQuery}&quot;</p>
+          {/* Create Buttons */}
+          <div className="flex gap-3">
+            <Link
+              href="/browse/movie/new"
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-800 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
+              aria-label="Add new movie"
+            >
+              <Plus className="w-5 h-5" />
+              <Film className="w-5 h-5" />
+              <span className="hidden sm:inline">Add Movie</span>
+            </Link>
+            <Link
+              href="/browse/tvshow/new"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
+              aria-label="Add new TV show"
+            >
+              <Plus className="w-5 h-5" />
+              <Tv className="w-5 h-5" />
+              <span className="hidden sm:inline">Add TV Show</span>
+            </Link>
+          </div>
         </div>
-      )}
+
+        {/* Search Bar Container */}
+        <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
+          <div className="relative flex-grow">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <Search size={20} />
+            </div>
+            <input
+              type="text"
+              placeholder="Search movies and TV shows..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 rounded-full pl-12 pr-6 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-red-600/30 shadow-xl transition-all"
+              aria-label="Search movies and TV shows"
+            />
+          </div>
+
+          {/* Filters Button */}
+          <button
+            type="button"
+            className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium transition-colors border border-white/10"
+            aria-label="Open filters"
+          >
+            Filters <SlidersHorizontal size={18} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -128,46 +147,7 @@ const MovieShowsBrowse = () => {
   return (
     <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white">
       {/* --- HERO SECTION --- */}
-      <div className="relative w-full h-[500px] flex flex-col justify-center">
-        {/* Background Image with Fade Overlay */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url('https://www.wallpaperflare.com/static/436/228/997/movies-mad-max-the-dark-knight-interstellar-movie-wallpaper.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center 20%' // Adjusted position to show more faces
-          }}
-        >
-          {/* The Gradient: Darkens top, and fades bottom into the page background color (#1B1A1A) */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#1B1A1A]"></div>
-        </div>
-
-        {/* Content Overlay */}
-        <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <h1 className="text-5xl font-bold text-white mb-6 tracking-wide drop-shadow-lg">Explore</h1>
-
-          {/* Search Bar Container */}
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
-            <div className="relative flex-grow">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <Search size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search movies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white text-gray-900 placeholder:text-gray-500 rounded-full pl-12 pr-6 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-red-600/30 shadow-xl transition-all"
-              />
-            </div>
-
-            {/* Visual placeholder for filters seen in your image */}
-            <button className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium transition-colors border border-white/10">
-              Filters <SlidersHorizontal size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
+      {getHeader(searchQuery, setSearchQuery)}
 
       {/* --- MAIN CONTENT SECTION --- */}
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-20 -mt-10 relative z-20">
@@ -196,6 +176,8 @@ const MovieShowsBrowse = () => {
                 </span>
                 <div className="flex gap-2">
                   <button
+                    type="button"
+                    aria-label="Previous Page"
                     onClick={goPreviousPage}
                     disabled={currentPage === 1}
                     className="p-2 rounded-full bg-white/5 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
@@ -203,6 +185,8 @@ const MovieShowsBrowse = () => {
                     <ChevronLeft size={20} />
                   </button>
                   <button
+                    type="button"
+                    aria-label="Next Page"
                     onClick={goNextPage}
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-full bg-white/5 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
@@ -228,9 +212,11 @@ const MovieShowsBrowse = () => {
             <div className="mt-12 flex justify-center">
               <div className="flex items-center gap-6 bg-white/5 px-6 py-3 rounded-full backdrop-blur-sm border border-white/5">
                 <button
+                  type="button"
                   onClick={goPreviousPage}
                   disabled={currentPage === 1}
                   className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white disabled:text-gray-600 transition-colors"
+                  aria-label="Previous Page"
                 >
                   <ChevronLeft size={16} /> Previous
                 </button>
@@ -240,9 +226,11 @@ const MovieShowsBrowse = () => {
                 </span>
 
                 <button
+                  type="button"
                   onClick={goNextPage}
                   disabled={currentPage === totalPages}
                   className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white disabled:text-gray-600 transition-colors"
+                  aria-label="Next Page"
                 >
                   Next <ChevronRight size={16} />
                 </button>
