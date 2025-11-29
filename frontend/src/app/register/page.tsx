@@ -6,7 +6,7 @@ import { useFormik } from 'formik';
 import { registerUser } from '@/services/credentialsApi';
 import { registerSchema, validatePasswordStrength } from '@/utils/validation';
 import type { RegisterCredentials } from '@/types/auth';
-import './styles.css';
+// import './styles.css'; // Styles are now handled inline for the new layout
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -62,206 +62,291 @@ export default function RegisterPage() {
 
   const passwordStrength = validatePasswordStrength(formik.values.password);
 
+  // Common style for all inputs
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 16px',
+    backgroundColor: '#E2E8F0', // Light gray background from design
+    border: '1px solid transparent',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    color: '#2d3748',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 0.2s'
+  };
+
+  const getInputBorder = (fieldName: keyof typeof formik.values) => {
+    if (formik.touched[fieldName] && formik.errors[fieldName]) return '1px solid #e53e3e'; // Red error border
+    return '1px solid transparent';
+  };
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h1>Create Account</h1>
-          <p>Join us to discover amazing movies</p>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', fontFamily: '-apple-system, sans-serif', backgroundColor: 'white' }}>
+      {/* LEFT SIDE - FORM */}
+      <div
+        style={{
+          flex: '1',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '40px 60px',
+          maxWidth: '700px', // Prevent stretching too wide on huge screens
+          overflowY: 'auto'
+        }}
+      >
+        {/* Header Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '500', color: '#1a202c', marginBottom: '0.5rem' }}>MoviesApp</h2>
+          <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1a202c', margin: 0 }}>Let&apos;s get you started!</h1>
         </div>
 
-        <form onSubmit={formik.handleSubmit} className="auth-form">
-          {errorMessage && (
-            <div className="alert alert-error" role="alert">
-              {errorMessage}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="alert alert-success" role="alert">
-              {successMessage}
-            </div>
-          )}
-
-          {/* Email Field */}
-          <div className="form-group">
-            <label htmlFor="email">
-              Email <span className="required">*</span>
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className={formik.touched.email && formik.errors.email ? 'error' : ''}
-              disabled={isLoading}
-            />
-            {formik.touched.email && formik.errors.email && <div className="error-message">{formik.errors.email}</div>}
+        {/* Alerts */}
+        {errorMessage && (
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: '#fed7d7',
+              color: '#c53030',
+              borderRadius: '6px',
+              marginBottom: '1rem',
+              fontSize: '0.9rem'
+            }}
+          >
+            {errorMessage}
           </div>
-
-          {/* Username Field */}
-          <div className="form-group">
-            <label htmlFor="username">
-              Username <span className="required">*</span>
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              placeholder="Choose a username"
-              value={formik.values.username}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className={formik.touched.username && formik.errors.username ? 'error' : ''}
-              disabled={isLoading}
-            />
-            {formik.touched.username && formik.errors.username && <div className="error-message">{formik.errors.username}</div>}
-            <div className="field-hint">3-20 characters, start with a letter, letters/numbers/underscores only</div>
+        )}
+        {successMessage && (
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: '#c6f6d5',
+              color: '#2f855a',
+              borderRadius: '6px',
+              marginBottom: '1rem',
+              fontSize: '0.9rem'
+            }}
+          >
+            {successMessage}
           </div>
+        )}
 
-          {/* First Name Field */}
-          <div className="form-group">
-            <label htmlFor="firstname">
-              First Name <span className="required">*</span>
-            </label>
+        {/* Form */}
+        <form onSubmit={formik.handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* First Name */}
+          <div>
             <input
               id="firstname"
               name="firstname"
               type="text"
-              placeholder="Your first name"
+              placeholder="First Name"
               value={formik.values.firstname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={formik.touched.firstname && formik.errors.firstname ? 'error' : ''}
+              style={{ ...inputStyle, border: getInputBorder('firstname') }}
               disabled={isLoading}
             />
-            {formik.touched.firstname && formik.errors.firstname && <div className="error-message">{formik.errors.firstname}</div>}
+            {formik.touched.firstname && formik.errors.firstname && <div style={errorTextStyle}>{formik.errors.firstname}</div>}
           </div>
 
-          {/* Last Name Field */}
-          <div className="form-group">
-            <label htmlFor="lastname">
-              Last Name <span className="required">*</span>
-            </label>
+          {/* Last Name */}
+          <div>
             <input
               id="lastname"
               name="lastname"
               type="text"
-              placeholder="Your last name"
+              placeholder="Last Name"
               value={formik.values.lastname}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={formik.touched.lastname && formik.errors.lastname ? 'error' : ''}
+              style={{ ...inputStyle, border: getInputBorder('lastname') }}
               disabled={isLoading}
             />
-            {formik.touched.lastname && formik.errors.lastname && <div className="error-message">{formik.errors.lastname}</div>}
+            {formik.touched.lastname && formik.errors.lastname && <div style={errorTextStyle}>{formik.errors.lastname}</div>}
           </div>
 
-          {/* Phone Field */}
-          <div className="form-group">
-            <label htmlFor="phone">
-              Phone Number <span className="required">*</span>
-            </label>
+          {/* Email */}
+          <div>
             <input
-              id="phone"
-              name="phone"
-              type="tel"
-              placeholder="10 digits (e.g., 2065551234)"
-              value={formik.values.phone}
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Email Address"
+              value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={formik.touched.phone && formik.errors.phone ? 'error' : ''}
+              style={{ ...inputStyle, border: getInputBorder('email') }}
               disabled={isLoading}
-              maxLength={10}
             />
-            {formik.touched.phone && formik.errors.phone && <div className="error-message">{formik.errors.phone}</div>}
-            <div className="field-hint">Enter 10 digits without spaces or dashes</div>
+            {formik.touched.email && formik.errors.email && <div style={errorTextStyle}>{formik.errors.email}</div>}
           </div>
 
-          {/* Password Field */}
-          <div className="form-group">
-            <label htmlFor="password">
-              Password <span className="required">*</span>
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Create a strong password"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={formik.touched.password && formik.errors.password ? 'error' : ''}
-                disabled={isLoading}
-              />
-              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            {formik.touched.password && formik.errors.password && <div className="error-message">{formik.errors.password}</div>}
+          {/* Username */}
+          <div>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Username"
+              value={formik.values.username}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={{ ...inputStyle, border: getInputBorder('username') }}
+              disabled={isLoading}
+            />
+            {formik.touched.username && formik.errors.username && <div style={errorTextStyle}>{formik.errors.username}</div>}
+          </div>
+
+          {/* Password */}
+          <div style={{ position: 'relative' }}>
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={{ ...inputStyle, border: getInputBorder('password'), paddingRight: '45px' }}
+              disabled={isLoading}
+            />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={eyeButtonStyle} tabIndex={-1}>
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+            {formik.touched.password && formik.errors.password && <div style={errorTextStyle}>{formik.errors.password}</div>}
+
+            {/* Password Strength Indicator */}
             {formik.values.password && (
-              <div className="password-strength">
-                <div className="strength-bar">
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ height: '4px', backgroundColor: '#edf2f7', borderRadius: '2px', overflow: 'hidden' }}>
                   <div
-                    className={`strength-fill strength-${Math.min(passwordStrength.score, 5)}`}
-                    style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                    style={{
+                      height: '100%',
+                      width: `${(passwordStrength.score / 6) * 100}%`,
+                      backgroundColor: passwordStrength.score < 3 ? '#fc8181' : passwordStrength.score < 5 ? '#f6ad55' : '#68d391',
+                      transition: 'width 0.3s ease'
+                    }}
                   />
                 </div>
                 {passwordStrength.feedback.length > 0 && (
-                  <div className="strength-feedback">Required: {passwordStrength.feedback.join(', ')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#718096', marginTop: '4px' }}>
+                    Required: {passwordStrength.feedback.join(', ')}
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Confirm Password Field */}
-          <div className="form-group">
-            <label htmlFor="confirmPassword">
-              Confirm Password <span className="required">*</span>
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Re-enter your password"
-                value={formik.values.confirmPassword}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'error' : ''}
-                disabled={isLoading}
-              />
-              <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex={-1}>
-                {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
+          {/* Confirm Password */}
+          <div style={{ position: 'relative' }}>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="Confirm Password"
+              value={formik.values.confirmPassword}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={{ ...inputStyle, border: getInputBorder('confirmPassword'), paddingRight: '45px' }}
+              disabled={isLoading}
+            />
+            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={eyeButtonStyle} tabIndex={-1}>
+              {showConfirmPassword ? 'Hide' : 'Show'}
+            </button>
             {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-              <div className="error-message">{formik.errors.confirmPassword}</div>
+              <div style={errorTextStyle}>{formik.errors.confirmPassword}</div>
             )}
           </div>
 
+          {/* Phone Number */}
+          <div>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              placeholder="Phone Number (10 digits)"
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              maxLength={10}
+              style={{ ...inputStyle, border: getInputBorder('phone') }}
+              disabled={isLoading}
+            />
+            {formik.touched.phone && formik.errors.phone && <div style={errorTextStyle}>{formik.errors.phone}</div>}
+          </div>
+
           {/* Submit Button */}
-          <button type="submit" className="submit-button" disabled={isLoading || !formik.isValid}>
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              marginTop: '1rem',
+              padding: '16px',
+              backgroundColor: '#1E90FF', // Dodger Blue from design
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.7 : 1,
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {isLoading ? 'Creating Account...' : 'Register Account'}
           </button>
         </form>
 
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
-            <a href="/login" className="footer-link">
-              Sign In
-            </a>
-          </p>
-          <p style={{ marginTop: '6px' }}>
-            <a href="/change-password" className="footer-link">Forgot Password?</a>
-          </p>
-        </div>
+        {/* Footer Link */}
+        <p style={{ marginTop: '2rem', color: '#4a5568', fontSize: '0.95rem' }}>
+          Already a member?{' '}
+          <a href="/login" style={{ color: '#1E90FF', textDecoration: 'none', fontWeight: '600' }}>
+            Sign in
+          </a>{' '}
+          here!
+        </p>
       </div>
+
+      {/* RIGHT SIDE - IMAGE */}
+      <div
+        className="image-panel"
+        style={{
+          flex: '1',
+          backgroundImage: 'url("https://images.pexels.com/photos/7991114/pexels-photo-7991114.jpeg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      />
+
+      {/* Responsive Styles */}
+      <style jsx global>{`
+        @media (max-width: 900px) {
+          .image-panel {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
+
+// Helper Styles
+const errorTextStyle = {
+  color: '#e53e3e',
+  fontSize: '0.8rem',
+  marginTop: '4px',
+  marginLeft: '4px'
+};
+
+const eyeButtonStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: '12px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  color: '#718096',
+  fontSize: '0.8rem',
+  fontWeight: '600'
+};
