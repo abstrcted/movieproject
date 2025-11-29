@@ -97,3 +97,93 @@ export const validatePasswordStrength = (
 
   return { score, feedback };
 };
+
+/**
+ * Movie creation form validation schema
+ */
+export const createMovieSchema = Yup.object({
+  title: Yup.string()
+    .required('Title is required')
+    .min(1, 'Title must be at least 1 character')
+    .max(200, 'Title must be less than 200 characters'),
+  original_title: Yup.string()
+    .max(200, 'Original title must be less than 200 characters'),
+  year: Yup.number()
+    .required('Year is required')
+    .min(1888, 'Year must be 1888 or later')
+    .max(new Date().getFullYear() + 5, `Year cannot be more than ${new Date().getFullYear() + 5}`),
+  director: Yup.string()
+    .required('Director is required')
+    .max(100, 'Director name must be less than 100 characters'),
+  genres: Yup.array()
+    .of(Yup.string())
+    .min(1, 'At least one genre is required')
+    .required('Genres are required'),
+  mpa_rating: Yup.string()
+    .required('MPA rating is required')
+    .oneOf(['G', 'PG', 'PG-13', 'R', 'NC-17', 'NR'], 'Invalid MPA rating'),
+  runtime_in_minutes: Yup.number()
+    .required('Runtime is required')
+    .min(1, 'Runtime must be at least 1 minute')
+    .max(1000, 'Runtime must be less than 1000 minutes'),
+  studio: Yup.string()
+    .max(100, 'Studio name must be less than 100 characters'),
+  budget: Yup.number()
+    .min(0, 'Budget cannot be negative'),
+  revenue: Yup.number()
+    .min(0, 'Revenue cannot be negative'),
+  release_date: Yup.string()
+    .required('Release date is required'),
+  overview: Yup.string()
+    .required('Overview is required')
+    .min(10, 'Overview must be at least 10 characters')
+    .max(2000, 'Overview must be less than 2000 characters'),
+  poster_url: Yup.string()
+    .url('Poster URL must be a valid URL'),
+  backdrop_url: Yup.string()
+    .url('Backdrop URL must be a valid URL')
+});
+
+/**
+ * TV Show creation form validation schema
+ */
+export const createTVShowSchema = Yup.object({
+  name: Yup.string()
+    .required('Name is required')
+    .min(1, 'Name must be at least 1 character')
+    .max(200, 'Name must be less than 200 characters'),
+  originalName: Yup.string()
+    .max(200, 'Original name must be less than 200 characters'),
+  firstAirDate: Yup.string()
+    .required('First air date is required'),
+  lastAirDate: Yup.string(),
+  seasons: Yup.number()
+    .required('Number of seasons is required')
+    .min(1, 'Must have at least 1 season')
+    .max(100, 'Seasons must be less than 100'),
+  episodes: Yup.number()
+    .min(1, 'Must have at least 1 episode')
+    .max(10000, 'Episodes must be less than 10000'),
+  status: Yup.string()
+    .required('Status is required')
+    .oneOf(['Returning Series', 'Ended', 'Canceled', 'In Production', 'Planned'], 'Invalid status'),
+  tMDbRating: Yup.number()
+    .min(0, 'Rating cannot be negative')
+    .max(10, 'Rating cannot be more than 10'),
+  overview: Yup.string()
+    .required('Overview is required')
+    .min(10, 'Overview must be at least 10 characters')
+    .max(2000, 'Overview must be less than 2000 characters'),
+  genres: Yup.array()
+    .of(Yup.string())
+    .min(1, 'At least one genre is required')
+    .required('Genres are required'),
+  networks: Yup.string()
+    .max(100, 'Network name must be less than 100 characters'),
+  creators: Yup.array()
+    .of(Yup.string()),
+  posterURL: Yup.string()
+    .url('Poster URL must be a valid URL'),
+  backdropURL: Yup.string()
+    .url('Backdrop URL must be a valid URL')
+});

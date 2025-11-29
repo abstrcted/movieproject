@@ -223,4 +223,50 @@ export const searchTVShows = async (query: string, token?: string): Promise<TVSh
   }
 };
 
+/**
+ * Create a new TV show
+ * POST /series
+ */
+export const createTVShow = async (tvShowData: Partial<TVShow>, token?: string): Promise<TVShowsResponse> => {
+  try {
+    const config: any = {};
+
+    // Add authorization header if token is provided
+    if (token) {
+      config.headers = {
+        Authorization: `Bearer ${token}`
+      };
+    }
+
+    console.log('[TV Shows API] Creating TV show:', tvShowData);
+    const response = await tvShowsApi.post('/series', tvShowData, config);
+    console.log('[TV Shows API] Create response:', response.data);
+
+    return {
+      success: true,
+      message: 'TV show created successfully',
+      data: response.data.data || [response.data]
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[TV Shows API] Error creating TV show:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to create TV show'
+      };
+    }
+
+    console.error('[TV Shows API] Unexpected error:', error);
+    return {
+      success: false,
+      message: 'Network error'
+    };
+  }
+};
+
 export default tvShowsApi;

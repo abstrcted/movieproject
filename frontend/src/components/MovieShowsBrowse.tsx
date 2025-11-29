@@ -2,11 +2,70 @@
 
 import { MovieTvShow, normalizeMovie, normalizeTVShow } from '@/types/data/movieTvShowData';
 import MovieTvShowCard from './MovieTvShowCard';
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Plus, Film, Tv } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { getMovies, searchMovies } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
+import Link from 'next/link';
+
+function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
+  return (
+    <div className="flex flex-col gap-6 mb-8 md:mb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-white">Movies &amp; TV Shows</h1>
+
+        {/* Create Buttons */}
+        <div className="flex gap-3">
+          <Link
+            href="/browse/movie/new"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
+          >
+            <Plus className="w-5 h-5" />
+            <Film className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Movie</span>
+          </Link>
+          <Link
+            href="/browse/tvshow/new"
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors duration-200"
+          >
+            <Plus className="w-5 h-5" />
+            <Tv className="w-5 h-5" />
+            <span className="hidden sm:inline">Add TV Show</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative max-w-2xl w-full">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+          <Search size={24} className="text-gray-400" />
+        </div>
+        <input
+          type="text"
+          placeholder="Search movies and TV shows..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full pl-14 pr-6 py-3 md:py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all"
+        />
+      </div>
+    </div>
+  );
+}
+
+function getMoviesGrid(movies: MovieTvShow[], searchQuery: string) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+      {movies.length > 0 ? (
+        movies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
+      ) : (
+        <div className="col-span-full text-center py-20">
+          <p className="text-gray-400 text-lg">No movies found matching &quot;{searchQuery}&quot;</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const MovieShowsBrowse = () => {
   const ITEMS_PER_PAGE = 20;

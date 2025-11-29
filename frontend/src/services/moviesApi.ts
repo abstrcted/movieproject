@@ -326,4 +326,50 @@ export const searchMovies = async (query: string, token?: string): Promise<Movie
   };
 };
 
+/**
+ * Create a new movie
+ * POST /movies
+ */
+export const createMovie = async (movieData: Partial<Movie>, token?: string): Promise<MoviesResponse> => {
+  try {
+    const config: any = {};
+
+    // Add authorization header if token is provided
+    if (token) {
+      config.headers = {
+        Authorization: `Bearer ${token}`
+      };
+    }
+
+    console.log('[Movies API] Creating movie:', movieData);
+    const response = await moviesApi.post('/movies', movieData, config);
+    console.log('[Movies API] Create response:', response.data);
+
+    return {
+      success: true,
+      message: 'Movie created successfully',
+      data: response.data.data || [response.data]
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Movies API] Error creating movie:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to create movie'
+      };
+    }
+
+    console.error('[Movies API] Unexpected error:', error);
+    return {
+      success: false,
+      message: 'Network error'
+    };
+  }
+};
+
 export default moviesApi;
