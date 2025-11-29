@@ -66,10 +66,11 @@ export const normalizeMovie = (movie: Movie): MovieTvShow => {
     duration: runtime ? `${runtime} minutes` : undefined,
     studio: movie.studio,
     boxOffice: movie.boxOffice,
-    cast: movie.cast?.map(c => ({
-      actor: c.name,
-      character: c.character
-    })) || []
+    cast:
+      movie.cast?.map((c) => ({
+        actor: c.name,
+        character: c.character
+      })) || []
   };
 };
 
@@ -78,7 +79,12 @@ export const normalizeTVShow = (show: TVShow): MovieTvShow => {
     id: String(show.iD || show.id),
     type: 'tvshow',
     title: show.name || show.title || '',
-    image: show.posterURL || show.posterUrl || show.backdropURL || show.backdropUrl || 'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster',
+    image:
+      show.posterURL ||
+      show.posterUrl ||
+      show.backdropURL ||
+      show.backdropUrl ||
+      'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster',
     description: show.overview || show.description || '',
     creator: Array.isArray(show.creators) ? show.creators.join(', ') : show.creator,
     releaseDate: show.firstAirDate || show.releaseDate || '',
@@ -87,10 +93,11 @@ export const normalizeTVShow = (show: TVShow): MovieTvShow => {
     rating: show.rating || (show.tMDbRating ? `${show.tMDbRating}/10` : ''),
     seasons: show.seasons ? `${show.seasons} season${Number(show.seasons) > 1 ? 's' : ''}` : undefined,
     network: show.networks || show.network,
-    cast: show.cast?.map(c => ({
-      actor: c.name,
-      character: c.character
-    })) || []
+    cast:
+      show.cast?.map((c) => ({
+        actor: c.name,
+        character: c.character
+      })) || []
   };
 };
 

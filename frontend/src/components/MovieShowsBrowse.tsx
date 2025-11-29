@@ -2,47 +2,11 @@
 
 import { MovieTvShow, normalizeMovie, normalizeTVShow } from '@/types/data/movieTvShowData';
 import MovieTvShowCard from './MovieTvShowCard';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { getMovies, searchMovies } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
-
-function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
-  return (
-    <div className="flex flex-col gap-6 mb-8 md:mb-12">
-      <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-white">Movies &amp; TV Shows</h1>
-
-      {/* Search Bar */}
-      <div className="relative max-w-2xl w-full">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-          <Search size={24} className="text-gray-400" />
-        </div>
-        <input
-          type="text"
-          placeholder="Search movies and TV shows..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full pl-14 pr-6 py-3 md:py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all"
-        />
-      </div>
-    </div>
-  );
-}
-
-function getMoviesGrid(movies: MovieTvShow[], searchQuery: string) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-      {movies.length > 0 ? (
-        movies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
-      ) : (
-        <div className="col-span-full text-center py-20">
-          <p className="text-gray-400 text-lg">No movies found matching &quot;{searchQuery}&quot;</p>
-        </div>
-      )}
-    </div>
-  );
-}
 
 const MovieShowsBrowse = () => {
   const ITEMS_PER_PAGE = 20;
@@ -59,12 +23,12 @@ const MovieShowsBrowse = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 500); // Wait 500ms after user stops typing
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch data when search query changes
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -77,9 +41,7 @@ const MovieShowsBrowse = () => {
         const normalizedMovies = (moviesResponse.data || []).map(normalizeMovie);
         const normalizedTVShows = (tvShowsResponse.data || []).map(normalizeTVShow);
 
-        const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) =>
-          a.title.localeCompare(b.title)
-        );
+        const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) => a.title.localeCompare(b.title));
 
         setAllMoviesShows(combined);
       } catch (error) {
@@ -93,80 +55,144 @@ const MovieShowsBrowse = () => {
     fetchData();
   }, [debouncedSearchQuery, token]);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Reset to page 1 when search query changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchQuery]);
+  // Pagination Logic
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  useEffect(() => setCurrentPage(1), [debouncedSearchQuery]);
 
   const totalPages = Math.ceil(allMoviesShows.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  const goNextPage = () => {
-    handlePageChange(currentPage + 1);
-  };
-
-  const goPreviousPage = () => {
-    handlePageChange(currentPage - 1);
-  };
-
   const paginatedMovies = allMoviesShows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  return (
-    <section className="w-full min-h-screen bg-[#1B1A1A] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 md:py-12">
-      <div className="max-w-[1920px] mx-auto">
-        {/* Header Section */}
-        {getHeader(searchQuery, setSearchQuery)}
+  const goNextPage = () => handlePageChange(currentPage + 1);
+  const goPreviousPage = () => handlePageChange(currentPage - 1);
 
+  return (
+    <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white">
+      {/* --- HERO SECTION --- */}
+      <div className="relative w-full h-[500px] flex flex-col justify-center">
+        {/* Background Image with Fade Overlay */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url('https://www.wallpaperflare.com/static/436/228/997/movies-mad-max-the-dark-knight-interstellar-movie-wallpaper.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 20%' // Adjusted position to show more faces
+          }}
+        >
+          {/* The Gradient: Darkens top, and fades bottom into the page background color (#1B1A1A) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#1B1A1A]"></div>
+        </div>
+
+        {/* Content Overlay */}
+        <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+          <h1 className="text-5xl font-bold text-white mb-6 tracking-wide drop-shadow-lg">Explore</h1>
+
+          {/* Search Bar Container */}
+          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">
+            <div className="relative flex-grow">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={20} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search movies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white text-gray-900 placeholder:text-gray-500 rounded-full pl-12 pr-6 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-red-600/30 shadow-xl transition-all"
+              />
+            </div>
+
+            {/* Visual placeholder for filters seen in your image */}
+            <button className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium transition-colors border border-white/10">
+              Filters <SlidersHorizontal size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* --- MAIN CONTENT SECTION --- */}
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-20 -mt-10 relative z-20">
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-20">
-            <div className="text-white text-lg">Loading...</div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
           </div>
         )}
 
-        {/* Pagination */}
         {!loading && (
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between text-[#878787]">
-              <h1 className="text-sm font-normal">
-                Showing {allMoviesShows.length} result{allMoviesShows.length !== 1 ? 's' : ''}
-                {debouncedSearchQuery && ` for "${debouncedSearchQuery}"`}
-              </h1>
-              <div className="flex gap-px items-center">
-              <p>
-                Page {currentPage} of {totalPages}
-              </p>
-              <button
-                type="button"
-                onClick={goPreviousPage}
-                disabled={currentPage === 1}
-                aria-label="Previous Page"
-                className={`hover:scale-110 hover:text-white/60 ${currentPage === 1 ? 'hidden' : ''}`}
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                type="button"
-                onClick={goNextPage}
-                disabled={currentPage === totalPages}
-                aria-label="Next Page"
-                className={`hover:scale-110 hover:text-white/60 ${currentPage === totalPages ? 'hidden' : ''}`}
-              >
-                <ChevronRight size={24} />
-              </button>
+          <>
+            {/* Results Header */}
+            <div className="flex justify-between items-end mb-6 border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-gray-400 text-sm font-medium uppercase tracking-wider">
+                  {debouncedSearchQuery ? `Search Results for "${debouncedSearchQuery}"` : 'All Movies & TV Shows'}
+                </h2>
+                <p className="text-white text-xl font-semibold mt-1">{allMoviesShows.length} titles found</p>
+              </div>
+
+              {/* Top Pagination Controls */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-400 hidden sm:inline">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={goPreviousPage}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-full bg-white/5 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={goNextPage}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-full bg-white/5 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
 
             {/* Movies Grid */}
-            {getMoviesGrid(paginatedMovies, searchQuery)}
-          </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              {paginatedMovies.length > 0 ? (
+                paginatedMovies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
+              ) : (
+                <div className="col-span-full py-32 text-center text-gray-500">
+                  <p className="text-xl">No movies found matching your search.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Pagination */}
+            <div className="mt-12 flex justify-center">
+              <div className="flex items-center gap-6 bg-white/5 px-6 py-3 rounded-full backdrop-blur-sm border border-white/5">
+                <button
+                  onClick={goPreviousPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white disabled:text-gray-600 transition-colors"
+                >
+                  <ChevronLeft size={16} /> Previous
+                </button>
+
+                <span className="text-sm font-semibold text-white">
+                  {currentPage} <span className="text-gray-500 font-normal mx-1">/</span> {totalPages}
+                </span>
+
+                <button
+                  onClick={goNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white disabled:text-gray-600 transition-colors"
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

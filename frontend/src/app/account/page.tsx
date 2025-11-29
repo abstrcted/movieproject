@@ -37,80 +37,144 @@ export default function AccountPage() {
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
-          fontFamily: '-apple-system, sans-serif'
+          backgroundColor: '#141414',
+          color: '#e50914',
+          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif'
         }}
       >
-        <div style={{ color: '#718096' }}>Loading account details...</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Loading...</div>
       </div>
     );
   }
+
+  // Generate a fallback initial from genuine data
+  const initial = user?.username?.[0] || user?.name?.[0] || user?.email?.[0] || 'U';
 
   return (
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#f7fafc', // Very light gray background
-        padding: '40px 20px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        display: 'flex',
-        justifyContent: 'center'
+        backgroundColor: '#141414', // Netflix/Streaming dark background
+        color: '#ffffff',
+        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        padding: '0 20px 40px'
       }}
     >
+      {/* Top Navigation Bar Placeholder */}
       <div
         style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          width: '100%',
-          maxWidth: '600px',
-          padding: '40px',
-          height: 'fit-content'
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '20px 0',
+          maxWidth: '1000px',
+          margin: '0 auto'
         }}
       >
-        <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '20px', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '700', color: '#1a202c', margin: 0 }}>Account Information</h1>
-          <p style={{ color: '#718096', marginTop: '8px' }}>Manage your profile and settings</p>
+        <button
+          onClick={() => router.push('/browse')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#fff',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            opacity: 0.8,
+            transition: 'opacity 0.2s'
+          }}
+        >
+          Return to Browse
+        </button>
+      </div>
+
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        {/* Header */}
+        <div
+          style={{
+            borderBottom: '1px solid #333',
+            paddingBottom: '20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px'
+          }}
+        >
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0 }}>Account</h1>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                backgroundColor: '#e50914', // Brand Red
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}
+            >
+              {initial}
+            </div>
+            <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>{user?.username || user?.name || 'Member'}</span>
+          </div>
         </div>
 
         {user ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Username Section */}
-            <div style={itemStyle}>
-              <span style={labelStyle}>Username</span>
-              <span style={valueStyle}>{user.username || user.name || 'N/A'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Section: Membership Details */}
+            <div style={sectionStyle}>
+              <div style={sectionLabelStyle}>MEMBERSHIP DETAILS</div>
+
+              <div style={sectionContentStyle}>
+                {/* Email Row */}
+                <div style={rowStyle}>
+                  <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{user.email || 'N/A'}</div>
+                  <div style={subTextStyle}>Email</div>
+                </div>
+
+                {/* Username Row */}
+                <div style={rowStyle}>
+                  <div style={{ color: '#ccc' }}>{user.username || user.name || 'N/A'}</div>
+                  <div style={subTextStyle}>Username</div>
+                </div>
+
+                {/* ID Row */}
+                <div style={{ ...rowStyle, borderBottom: 'none' }}>
+                  <div style={{ color: '#777', fontFamily: 'monospace', fontSize: '0.9rem' }}>{user.id || 'N/A'}</div>
+                  <div style={subTextStyle}>User ID</div>
+                </div>
+              </div>
             </div>
 
-            {/* Email Section */}
-            <div style={itemStyle}>
-              <span style={labelStyle}>Email Address</span>
-              <span style={valueStyle}>{user.email || 'N/A'}</span>
+            {/* Section: Plan / Role */}
+            <div style={sectionStyle}>
+              <div style={sectionLabelStyle}>PLAN DETAILS</div>
+              <div style={sectionContentStyle}>
+                <div style={{ ...rowStyle, borderBottom: 'none', justifyContent: 'flex-start', gap: '15px' }}>
+                  <span style={{ fontWeight: '700', textTransform: 'uppercase', fontSize: '1.1rem' }}>{user.role || 'User'}</span>
+                  {/* Badge showing it's an active role */}
+                  <span style={badgeStyle}>Active</span>
+                </div>
+              </div>
             </div>
 
-            {/* Role Section */}
-            <div style={itemStyle}>
-              <span style={labelStyle}>Account Role</span>
-              <span style={roleBadgeStyle}>{user.role || 'User'}</span>
-            </div>
-
-            {/* ID Section (Often smaller or less prominent) */}
-            <div style={itemStyle}>
-              <span style={labelStyle}>User ID</span>
-              <span style={{ ...valueStyle, fontSize: '0.875rem', color: '#a0aec0', fontFamily: 'monospace' }}>{user.id || 'N/A'}</span>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
-              <button onClick={() => router.push('/browse')} style={secondaryButtonStyle}>
-                Back to Browse
-              </button>
-              {/* Sign Out button */}
-              <button onClick={() => signOut({ callbackUrl: '/' })} style={dangerButtonStyle}>
-                Sign Out
-              </button>
+            {/* Section: Settings */}
+            <div style={{ ...sectionStyle, borderBottom: 'none' }}>
+              <div style={sectionLabelStyle}>SETTINGS</div>
+              <div style={{ ...sectionContentStyle, border: 'none' }}>
+                <div style={{ ...rowStyle, borderBottom: 'none', justifyContent: 'flex-start', paddingTop: '10px' }}>
+                  <button onClick={() => signOut({ callbackUrl: '/' })} style={signOutButtonStyle}>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
-          <div style={{ color: '#e53e3e', textAlign: 'center', padding: '20px' }}>No account information available.</div>
+          <div style={{ color: '#e50914', fontSize: '1.2rem', textAlign: 'center', padding: '40px' }}>
+            No account information available.
+          </div>
         )}
       </div>
     </div>
@@ -119,59 +183,63 @@ export default function AccountPage() {
 
 // --- Styles ---
 
-const itemStyle: React.CSSProperties = {
+const sectionStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  gap: '6px',
-  paddingBottom: '16px',
-  borderBottom: '1px solid #edf2f7'
+  borderBottom: '1px solid #333', // Subtle dark divider
+  padding: '20px 0',
+  flexWrap: 'wrap',
+  gap: '20px'
 };
 
-const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: '600',
-  color: '#718096',
+const sectionLabelStyle: React.CSSProperties = {
+  width: '240px',
+  color: '#999', // Muted text for labels
+  fontSize: '0.95rem',
+  fontWeight: '500',
   textTransform: 'uppercase',
-  letterSpacing: '0.05em'
+  paddingTop: '5px'
 };
 
-const valueStyle: React.CSSProperties = {
-  fontSize: '1.125rem',
-  color: '#2d3748',
-  fontWeight: '500'
+const sectionContentStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: '300px'
 };
 
-const roleBadgeStyle: React.CSSProperties = {
-  display: 'inline-block',
-  padding: '4px 12px',
-  borderRadius: '9999px',
-  backgroundColor: '#ebf8ff', // Light blue background
-  color: '#3182ce', // Blue text
-  fontSize: '0.875rem',
-  fontWeight: '600',
-  width: 'fit-content'
+const rowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '12px 0',
+  borderBottom: '1px solid #333'
 };
 
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '10px 20px',
-  backgroundColor: 'white',
-  border: '1px solid #cbd5e0',
-  borderRadius: '6px',
-  color: '#4a5568',
+const subTextStyle: React.CSSProperties = {
+  color: '#666',
+  fontSize: '0.85rem',
+  textTransform: 'uppercase',
+  fontWeight: '600'
+};
+
+const badgeStyle: React.CSSProperties = {
+  backgroundColor: '#333',
+  color: '#e5e5e5',
+  fontSize: '0.75rem',
+  padding: '3px 8px',
+  borderRadius: '2px',
+  fontWeight: 'bold',
+  border: '1px solid #555',
+  letterSpacing: '0.5px'
+};
+
+const signOutButtonStyle: React.CSSProperties = {
+  padding: '12px 30px',
+  backgroundColor: '#e50914', // Brand Red
+  border: 'none',
+  borderRadius: '2px',
+  color: 'white',
+  fontSize: '1rem',
   fontWeight: '600',
   cursor: 'pointer',
-  transition: 'all 0.2s',
-  fontSize: '0.95rem'
-};
-
-const dangerButtonStyle: React.CSSProperties = {
-  padding: '10px 20px',
-  backgroundColor: 'white',
-  border: '1px solid #fed7d7',
-  borderRadius: '6px',
-  color: '#e53e3e',
-  fontWeight: '700',
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-  fontSize: '0.95rem'
+  transition: 'background 0.2s ease',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.5)'
 };
