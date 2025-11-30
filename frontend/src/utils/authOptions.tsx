@@ -37,15 +37,21 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (response.success && response.data) {
+            // Extract token flexibly — different deployments return it under different keys
+            const accessToken =
+              (response as any)?.data?.accessToken ||
+              (response as any)?.data?.token ||
+              (response as any)?.accessToken ||
+              (response as any)?.token;
             // Return user object that will be stored in the JWT
             return {
               id: response.data.user.id,
               email: response.data.user.email,
               name: response.data.user.username,
               username: response.data.user.username,
-              token: response.data.token,
+              token: accessToken,
               role: response.data.user.role
-            };
+            } as any;
           } else {
             throw new Error(response.message || 'Authentication failed');
           }

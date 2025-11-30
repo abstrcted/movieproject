@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
-import { registerUser } from '@/services/credentialsApi';
+import { registerUser, sendVerificationEmail, loginUser } from '@/services/credentialsApi';
 import { registerSchema, validatePasswordStrength } from '@/utils/validation';
 import type { RegisterCredentials } from '@/types/auth';
 // import './styles.css'; // Styles are now handled inline for the new layout
@@ -41,14 +41,51 @@ export default function RegisterPage() {
           lastname: values.lastname,
           phone: values.phone
         };
-
         const response = await registerUser(credentials);
-
         if (response.success) {
-          setSuccessMessage('Registration successful! Redirecting to login...');
+          // Attempt to send verification email. If the register response did not include an access token,
+          // try logging in with the just-created credentials to obtain one (required by the API).
+          try {
+            const maybeToken =
+              (response as any)?.data?.accessToken ||
+              (response as any)?.data?.token ||
+              (response as any)?.accessToken ||
+              (response as any)?.token ||
+              (response as any)?.data?.data?.accessToken;
+
+            let token = maybeToken;
+            if (!token) {
+              // Try to login to obtain access token
+              try {
+                const loginResp = await loginUser({ email: values.email, password: values.password });
+                token =
+                  (loginResp as any)?.data?.accessToken ||
+                  (loginResp as any)?.accessToken ||
+                  (loginResp as any)?.token ||
+                  (loginResp as any)?.data?.token;
+              } catch {
+                token = undefined;
+              }
+            }
+
+            if (token) {
+              const verifyRes = await sendVerificationEmail(token);
+              if (verifyRes?.success) {
+                setSuccessMessage('Registration successful! Verification email sent — check your inbox. Redirecting to login...');
+              } else {
+                setSuccessMessage('Registration successful! Please check your email to verify your account. Redirecting to login...');
+              }
+            } else {
+              setSuccessMessage('Registration successful! Please check your email to verify your account. Redirecting to login...');
+            }
+          } catch {
+            // Non-fatal: continue to login but show message
+            setSuccessMessage('Registration successful! Please check your email to verify your account. Redirecting to login...');
+          }
+
           setTimeout(() => {
             router.push('/login');
-          }, 2000);
+          }, 3000);
         } else {
           setErrorMessage(response.message || 'Registration failed. Please try again.');
         }

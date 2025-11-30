@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 export default function ChangePasswordPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
+  const [showTokenInputs, setShowTokenInputs] = useState(false);
 
   useEffect(() => {
     try {
@@ -44,7 +45,8 @@ export default function ChangePasswordPage() {
       try {
         const response = await requestPasswordReset({ email: values.email });
         if (response.success) {
-          setSuccessMessage('If the account exists and email is verified, you will receive an email with reset instructions.');
+          setSuccessMessage('If the account exists you will receive an email with reset instructions. Paste the token below to continue.');
+          setShowTokenInputs(true);
         } else {
           setErrorMessage(response.message || 'Password reset request failed.');
         }
@@ -78,7 +80,7 @@ export default function ChangePasswordPage() {
       setSuccessMessage('');
       try {
         if (!token) {
-          setErrorMessage('Missing reset token. Use the link from the email.');
+          setErrorMessage('Missing reset token. Paste the token you received in email.');
           setIsLoading(false);
           return;
         }
@@ -199,9 +201,24 @@ export default function ChangePasswordPage() {
         {successMessage && <div style={alertSuccessStyle}>{successMessage}</div>}
 
         {/* --- FORM SECTION --- */}
-        {token ? (
+        {token || showTokenInputs ? (
           // RESET PASSWORD FORM
           <form onSubmit={resetFormik.handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Token input when user pastes token received by email */}
+            {!token && (
+              <div>
+                <input
+                  type="text"
+                  placeholder="Paste reset token from email"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value.trim())}
+                  style={{ ...inputStyle, marginBottom: '0.5rem' }}
+                />
+                <div style={{ fontSize: '0.85rem', color: '#718096' }}>
+                  Paste the token you received by email here, then enter a new password below.
+                </div>
+              </div>
+            )}
             {/* New Password */}
             <div style={{ position: 'relative' }}>
               <input
