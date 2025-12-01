@@ -2,6 +2,7 @@
 
 import { MovieTvShow, normalizeMovie, normalizeTVShow } from '@/types/data/movieTvShowData';
 import MovieTvShowCard from './MovieTvShowCard';
+import WatchlistPanel from './WatchlistPanel';
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Plus, Film, Tv } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -145,7 +146,7 @@ const MovieShowsBrowse = () => {
   const goPreviousPage = () => handlePageChange(currentPage - 1);
 
   return (
-    <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white">
+    <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white pb-24">
       {/* --- HERO SECTION --- */}
       {getHeader(searchQuery, setSearchQuery)}
 
@@ -239,6 +240,9 @@ const MovieShowsBrowse = () => {
           </>
         )}
       </div>
+
+      {/* --- WATCHLIST PANEL --- */}
+      <WatchlistPanel />
     </div>
   );
 };

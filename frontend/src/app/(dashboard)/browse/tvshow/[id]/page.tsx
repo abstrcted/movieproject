@@ -6,6 +6,8 @@ import { notFound, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { getTVShowById } from '@/services/tvShowsApi';
+import { useWatchlist } from '@/contexts/WatchlistContext';
+import { Plus, Check } from 'lucide-react';
 
 const TvShowDetailPage = () => {
   const params = useParams();
@@ -15,8 +17,10 @@ const TvShowDetailPage = () => {
   const [tvShow, setTvShow] = useState<MovieTvShow | null>(null);
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
 
   const token = (session?.user as any)?.accessToken;
+  const inWatchlist = tvShow ? isInWatchlist(tvShow.id) : false;
 
   useEffect(() => {
     const fetchTVShow = async () => {
@@ -111,11 +115,46 @@ const TvShowDetailPage = () => {
                 <p className="text-gray-300 leading-relaxed text-base md:text-lg">{tvShow.description}</p>
               </div>
 
-              {/* Delete Button - Design Only (Non-functional) */}
-              <div className="mt-8">
+              {/* Action Buttons */}
+              <div className="mt-8 flex gap-3">
+                {/* Watchlist Button */}
                 <button
+                  type="button"
+                  onClick={() => {
+                    if (tvShow) {
+                      if (inWatchlist) {
+                        removeFromWatchlist(tvShow.id);
+                      } else {
+                        addToWatchlist(tvShow);
+                      }
+                    }
+                  }}
+                  className={`px-6 py-3 font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2 ${
+                    inWatchlist
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  }`}
+                  aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+                >
+                  {inWatchlist ? (
+                    <>
+                      <Check size={20} />
+                      In Watchlist
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} />
+                      Add to Watchlist
+                    </>
+                  )}
+                </button>
+
+                {/* Delete Button - Design Only (Non-functional) */}
+                <button
+                  type="button"
                   onClick={() => setShowDeleteModal(true)}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  aria-label="Delete TV show"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path
