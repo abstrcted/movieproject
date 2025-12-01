@@ -255,7 +255,8 @@ export const sendVerificationEmail = async (accessToken?: string): Promise<AuthR
     return { success: false, message: 'Missing access token', error: 'Authentication required' };
   }
 
-  const endpoints = ['/auth/email/verify-request', '/auth/verify-email', '/auth/verify/request'];
+  // Try the documented endpoint first, then common fallbacks
+  const endpoints = ['/auth/verify/email/send', '/auth/email/verify-request', '/auth/verify-email', '/auth/verify/request'];
   for (const ep of endpoints) {
     try {
       if (isDev) console.log('[Credentials API] Sending verification email to', ep);
