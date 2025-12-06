@@ -94,6 +94,10 @@ const MovieShowsBrowse = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [allMoviesShows, setAllMoviesShows] = useState<MovieTvShow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalResults, setTotalResults] = useState(0);
+  const [moviePages, setMoviePages] = useState(0);
+  const [tvPages, setTvPages] = useState(0);
+  const [apiErrors, setApiErrors] = useState<{ movies?: string; tvShows?: string }>({});
   const { data: session } = useSession();
 
   const token = (session?.user as any)?.accessToken;
@@ -107,43 +111,134 @@ const MovieShowsBrowse = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch data
+  // Fetch data with server-side pagination
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setApiErrors({});
+
       try {
-        const [moviesResponse, tvShowsResponse] = await Promise.all([
-          debouncedSearchQuery ? searchMovies(debouncedSearchQuery, token) : getMovies({ token }),
-          debouncedSearchQuery ? searchTVShows(debouncedSearchQuery, token) : getTVShows({ token })
+        // Fetch movies and TV shows separately to handle individual failures
+        const moviesPromise = debouncedSearchQuery
+          ? searchMovies(debouncedSearchQuery, currentPage, token)
+          : getMovies({ page: currentPage, limit: ITEMS_PER_PAGE, token });
+
+        const tvShowsPromise = debouncedSearchQuery
+          ? searchTVShows(debouncedSearchQuery, currentPage, token)
+          : getTVShows({ page: currentPage, limit: ITEMS_PER_PAGE, token });
+
+        const [moviesResponse, tvShowsResponse] = await Promise.allSettled([
+          moviesPromise,
+          tvShowsPromise
         ]);
 
-        const normalizedMovies = (moviesResponse.data || []).map(normalizeMovie);
-        const normalizedTVShows = (tvShowsResponse.data || []).map(normalizeTVShow);
+        let normalizedMovies: any[] = [];
+        let normalizedTVShows: any[] = [];
+        let movieTotal = 0;
+        let tvTotal = 0;
+        let moviePageCount = 0;
+        let tvPageCount = 0;
+        const errors: { movies?: string; tvShows?: string } = {};
 
+        // Handle movies response
+        if (moviesResponse.status === 'fulfilled' && moviesResponse.value.success) {
+          normalizedMovies = (moviesResponse.value.data || []).map(normalizeMovie);
+          movieTotal = moviesResponse.value.totalResults || 0;
+          moviePageCount = moviesResponse.value.totalPages || 0;
+          console.log('[Browse] Movies pagination:', {
+            page: moviesResponse.value.page,
+            pageSize: moviesResponse.value.pageSize,
+            totalResults: movieTotal,
+            totalPages: moviePageCount,
+            itemsReceived: normalizedMovies.length
+          });
+        } else {
+          errors.movies = 'Movies API is currently unavailable';
+          console.error('Movies API error:', moviesResponse.status === 'rejected' ? moviesResponse.reason : moviesResponse.value.message);
+        }
+
+        // Handle TV shows response
+        if (tvShowsResponse.status === 'fulfilled' && tvShowsResponse.value.success) {
+          normalizedTVShows = (tvShowsResponse.value.data || []).map(normalizeTVShow);
+          tvTotal = tvShowsResponse.value.totalResults || 0;
+          tvPageCount = tvShowsResponse.value.totalPages || 0;
+          console.log('[Browse] TV Shows pagination:', {
+            page: tvShowsResponse.value.page,
+            pageSize: tvShowsResponse.value.pageSize,
+            totalResults: tvTotal,
+            totalPages: tvPageCount,
+            itemsReceived: normalizedTVShows.length
+          });
+        } else {
+          errors.tvShows = 'TV Shows API is currently unavailable';
+          console.error('TV Shows API error:', tvShowsResponse.status === 'rejected' ? tvShowsResponse.reason : tvShowsResponse.value.message);
+        }
+
+        // Combine and sort by title
         const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) => a.title.localeCompare(b.title));
 
+        const combinedTotalResults = movieTotal + tvTotal;
+        console.log('[Browse] Combined results:', {
+          moviesCount: normalizedMovies.length,
+          tvShowsCount: normalizedTVShows.length,
+          combinedCount: combined.length,
+          movieTotal,
+          tvTotal,
+          combinedTotalResults,
+          moviePages: moviePageCount,
+          tvPages: tvPageCount
+        });
+
         setAllMoviesShows(combined);
+        setTotalResults(combinedTotalResults);
+        setMoviePages(moviePageCount);
+        setTvPages(tvPageCount);
+        setApiErrors(errors);
       } catch (error) {
         console.error('Error fetching movies and TV shows:', error);
         setAllMoviesShows([]);
+        setTotalResults(0);
+        setApiErrors({ movies: 'Failed to load content', tvShows: 'Failed to load content' });
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [debouncedSearchQuery, token]);
+  }, [debouncedSearchQuery, currentPage, token]);
 
-  // Pagination Logic
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  // Reset to page 1 when search query changes
   useEffect(() => setCurrentPage(1), [debouncedSearchQuery]);
 
-  const totalPages = Math.ceil(allMoviesShows.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedMovies = allMoviesShows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // Calculate total pages - only if we have reliable data from BOTH APIs
+  // Note: Movies API doesn't provide totalPages/totalResults, only TV Shows API does
+  const hasBothPaginationInfo = moviePages > 0 && tvPages > 0;
+  const hasAnyPaginationInfo = moviePages > 0 || tvPages > 0;
 
-  const goNextPage = () => handlePageChange(currentPage + 1);
-  const goPreviousPage = () => handlePageChange(currentPage - 1);
+  // If both APIs provide pagination info, we can show accurate total pages
+  // Otherwise, we can only estimate or not show total
+  let totalPages = 0;
+
+  if (hasBothPaginationInfo) {
+    // Both APIs provide info - use the max
+    totalPages = Math.max(moviePages, tvPages);
+  } else if (hasAnyPaginationInfo && totalResults > 0) {
+    // Only one API provides info - estimate from total results
+    // This won't be accurate since Movies API doesn't provide total
+    totalPages = Math.ceil(totalResults / ITEMS_PER_PAGE);
+  }
+
+  // Enable next page logic:
+  // Since Movies API doesn't provide pagination info, we need to be lenient:
+  // - If we DON'T have complete pagination info from both APIs, allow next as long as we got results
+  // - If we DO have complete pagination info, use the calculated totalPages
+  // - Only disable next if we got 0 results (clearly at the end)
+  const hasNextPage = !hasBothPaginationInfo
+    ? allMoviesShows.length > 0  // No complete pagination info: allow next if we got any results
+    : currentPage < totalPages;   // Complete pagination info: use calculated total pages
+
+  const goNextPage = () => setCurrentPage(prev => prev + 1);
+  const goPreviousPage = () => setCurrentPage(prev => prev - 1);
 
   return (
     <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white pb-24">
@@ -161,19 +256,38 @@ const MovieShowsBrowse = () => {
 
         {!loading && (
           <>
+            {/* API Error Messages */}
+            {(apiErrors.movies || apiErrors.tvShows) && (
+              <div className="mb-6 space-y-2">
+                {apiErrors.movies && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                    <strong>Movies API:</strong> {apiErrors.movies}
+                  </div>
+                )}
+                {apiErrors.tvShows && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                    <strong>TV Shows API:</strong> {apiErrors.tvShows}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Results Header */}
             <div className="flex justify-between items-end mb-6 border-b border-white/10 pb-4">
               <div>
                 <h2 className="text-gray-400 text-sm font-medium uppercase tracking-wider">
                   {debouncedSearchQuery ? `Search Results for "${debouncedSearchQuery}"` : 'All Movies & TV Shows'}
                 </h2>
-                <p className="text-white text-xl font-semibold mt-1">{allMoviesShows.length} titles found</p>
+                <p className="text-white text-xl font-semibold mt-1">
+                  Showing {allMoviesShows.length} {allMoviesShows.length === 1 ? 'title' : 'titles'} on this page
+                  {!hasBothPaginationInfo && <span className="text-sm text-gray-400 ml-2">(pagination info unavailable)</span>}
+                </p>
               </div>
 
               {/* Top Pagination Controls */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-400 hidden sm:inline">
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage}
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -189,7 +303,7 @@ const MovieShowsBrowse = () => {
                     type="button"
                     aria-label="Next Page"
                     onClick={goNextPage}
-                    disabled={currentPage === totalPages}
+                    disabled={!hasNextPage}
                     className="p-2 rounded-full bg-white/5 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/5 transition-all"
                   >
                     <ChevronRight size={20} />
@@ -200,11 +314,11 @@ const MovieShowsBrowse = () => {
 
             {/* Movies Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {paginatedMovies.length > 0 ? (
-                paginatedMovies.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
+              {allMoviesShows.length > 0 ? (
+                allMoviesShows.map((movie: MovieTvShow) => <MovieTvShowCard key={movie.id} movie={movie} />)
               ) : (
                 <div className="col-span-full py-32 text-center text-gray-500">
-                  <p className="text-xl">No movies found matching your search.</p>
+                  <p className="text-xl">No movies or TV shows found matching your search.</p>
                 </div>
               )}
             </div>
@@ -223,13 +337,13 @@ const MovieShowsBrowse = () => {
                 </button>
 
                 <span className="text-sm font-semibold text-white">
-                  {currentPage} <span className="text-gray-500 font-normal mx-1">/</span> {totalPages}
+                  Page {currentPage}
                 </span>
 
                 <button
                   type="button"
                   onClick={goNextPage}
-                  disabled={currentPage === totalPages}
+                  disabled={!hasNextPage}
                   className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white disabled:text-gray-600 transition-colors"
                   aria-label="Next Page"
                 >

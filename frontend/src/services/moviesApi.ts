@@ -1,8 +1,11 @@
 // Movies API Service
 import axios, { AxiosError } from 'axios';
 
-const MOVIES_API_URL = process.env.MOVIES_API_URL || 'https://tcss460-moviewebapi.onrender.com';
+const MOVIES_API_URL = process.env.MOVIES_API_URL || 'https://tcss460-moviewebapi-t961.onrender.com';
 const MOVIES_API_KEY = process.env.MOVIES_API_KEY || 'movie_api_key_2025';
+
+console.log('[Movies API] Using base URL:', MOVIES_API_URL);
+console.log('[Movies API] Using API key:', MOVIES_API_KEY);
 
 // Create axios instance with default config
 const moviesApi = axios.create({
@@ -80,104 +83,108 @@ export interface MoviesResponse {
   data?: Movie[];
   movies?: Movie[];
   results?: Movie[];
+  page?: number;
+  pageSize?: number;
+  totalResults?: number;
+  totalPages?: number;
 }
 
 /**
  * Get all movies or search movies
- * GET /movies/title?q=
+ * GET /movies/title?q=&page=
  * Note: Using /movies/title endpoint to get full movie details including poster URLs
- * Fetches multiple pages to get more than 10 movies (default pageSize)
+ * Server-side pagination - fetches only one page at a time
  */
 export const getMovies = async (params?: {
   search?: string;
   genre?: string;
   year?: number;
+  page?: number;
   limit?: number;
   offset?: number;
   token?: string;
 }): Promise<MoviesResponse> => {
-  const movieMap = new Map<number, Movie>(); // Use Map to deduplicate by movie_id
-  const maxPages = 10; // Fetch first 10 pages (100 movies total)
+  try {
+    const config: any = {
+      params: {
+        q: params?.search || '', // Empty q to get all movies, or search term
+        page: params?.page || 1
+      }
+    };
 
-  // Fetch multiple pages
-  for (let page = 1; page <= maxPages; page++) {
-    try {
-      const config: any = {
-        params: {
-          q: '', // Empty q to get all movies
-          page: page
-        }
+    // Add authorization header if token is provided
+    if (params?.token) {
+      config.headers = {
+        Authorization: `Bearer ${params.token}`
       };
-
-      // Add authorization header if token is provided
-      if (params?.token) {
-        config.headers = {
-          Authorization: `Bearer ${params.token}`
-        };
-      }
-
-      const response = await moviesApi.get('/movies/title', config);
-      console.log(`[Movies API] Movies response page ${page}:`, response.data);
-
-      // Handle response format - API returns {page, pageSize, results: [...]}
-      if (response.data.results && Array.isArray(response.data.results)) {
-        if (response.data.results.length === 0) {
-          // No more results, stop fetching
-          break;
-        }
-
-        // Track if we found any new movies on this page
-        let newMoviesFound = false;
-
-        // Map cast from API format to our format for each movie
-        for (const movie of response.data.results) {
-          const movieId = movie.movie_id || movie.id;
-
-          // Only add if not already in the map (deduplicate)
-          if (movieId && !movieMap.has(movieId)) {
-            if (movie.cast && Array.isArray(movie.cast)) {
-              movie.cast = movie.cast.map((c: any) => ({
-                name: c.actor_name,
-                character: c.character_name
-              }));
-            }
-            movieMap.set(movieId, movie);
-            newMoviesFound = true;
-          }
-        }
-
-        // If no new movies were found on this page, stop fetching more pages
-        if (!newMoviesFound) {
-          console.log(`[Movies API] No new movies on page ${page}, stopping fetch`);
-          break;
-        }
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // If we get a 404 "No movies found", it means we've exhausted all pages
-        if (error.response?.status === 404 && error.response?.data?.error === 'No movies found') {
-          console.log(`[Movies API] No more results on page ${page}, stopping fetch`);
-          break; // Stop pagination but return what we have
-        }
-
-        // For other errors, log and stop
-        console.error(`[Movies API] Error on page ${page}:`, {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
-        break; // Stop on any other error
-      }
     }
+
+    const response = await moviesApi.get('/movies/title', config);
+    console.log(`[Movies API] Movies response:`, response.data);
+
+    // Handle response format - API returns {page, pageSize, results: [...]}
+    if (response.data.results && Array.isArray(response.data.results)) {
+      // Map cast from API format to our format for each movie
+      const movies = response.data.results.map((movie: any) => {
+        if (movie.cast && Array.isArray(movie.cast)) {
+          movie.cast = movie.cast.map((c: any) => ({
+            name: c.actor_name,
+            character: c.character_name
+          }));
+        }
+        return movie;
+      });
+
+      return {
+        success: true,
+        data: movies,
+        page: response.data.page,
+        pageSize: response.data.pageSize,
+        totalResults: response.data.totalResults || 0, // API doesn't always provide this
+        totalPages: response.data.totalPages || 0, // API doesn't always provide this
+        message: `Movies fetched successfully`
+      };
+    }
+
+    return {
+      success: true,
+      data: [],
+      page: 1,
+      pageSize: 0,
+      totalResults: 0,
+      totalPages: 0,
+      message: 'No movies found'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Movies API] Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      // Return empty result on error
+      return {
+        success: false,
+        data: [],
+        page: 1,
+        pageSize: 0,
+        totalResults: 0,
+        totalPages: 0,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to fetch movies'
+      };
+    }
+
+    return {
+      success: false,
+      data: [],
+      page: 1,
+      pageSize: 0,
+      totalResults: 0,
+      totalPages: 0,
+      message: 'Network error'
+    };
   }
-
-  const allMovies = Array.from(movieMap.values());
-
-  return {
-    success: true,
-    data: allMovies,
-    message: `Movies fetched successfully (${allMovies.length} unique movies)`
-  };
 };
 
 /**
@@ -233,97 +240,13 @@ export const getMovieById = async (id: string | number, token?: string): Promise
 
 /**
  * Search movies by title
- * GET /movies/title?q={query}
+ * GET /movies/title?q={query}&page=
  * Note: Using fuzzy title search from /movies/title endpoint to get full details with posters
+ * Server-side pagination - fetches only one page at a time
  */
-export const searchMovies = async (query: string, token?: string): Promise<MoviesResponse> => {
-  const movieMap = new Map<number, Movie>(); // Use Map to deduplicate by movie_id
-  const maxPages = 10; // Search across first 10 pages
-
-  // Fetch multiple pages for search results
-  for (let page = 1; page <= maxPages; page++) {
-    try {
-      // Only add trailing space if query is purely numeric (to prevent ID lookup)
-      const isNumeric = /^\d+$/.test(query);
-      const searchQuery = isNumeric ? query + ' ' : query;
-
-      const config: any = {
-        params: {
-          q: searchQuery,
-          page: page
-        }
-      };
-
-      // Add authorization header if token is provided
-      if (token) {
-        config.headers = {
-          Authorization: `Bearer ${token}`
-        };
-      }
-
-      console.log(`[Movies API] Searching for "${searchQuery}" on page ${page}`);
-      const response = await moviesApi.get('/movies/title', config);
-      console.log(`[Movies API] Search response page ${page}:`, response.data);
-
-      // Handle response format - API returns {page, pageSize, results: [...]}
-      if (response.data.results && Array.isArray(response.data.results)) {
-        if (response.data.results.length === 0) {
-          // No more results, stop fetching
-          break;
-        }
-
-        // Track if we found any new movies on this page
-        let newMoviesFound = false;
-
-        // Map cast from API format to our format for each movie
-        for (const movie of response.data.results) {
-          const movieId = movie.movie_id || movie.id;
-
-          // Only add if not already in the map (deduplicate)
-          if (movieId && !movieMap.has(movieId)) {
-            if (movie.cast && Array.isArray(movie.cast)) {
-              movie.cast = movie.cast.map((c: any) => ({
-                name: c.actor_name,
-                character: c.character_name
-              }));
-            }
-            movieMap.set(movieId, movie);
-            newMoviesFound = true;
-          }
-        }
-
-        // If no new movies were found on this page, stop fetching more pages
-        if (!newMoviesFound) {
-          console.log(`[Movies API] No new movies on page ${page}, stopping search`);
-          break;
-        }
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // If we get a 404 "No movies found", it means we've exhausted all pages
-        if (error.response?.status === 404 && error.response?.data?.error === 'No movies found') {
-          console.log(`[Movies API] No more results on page ${page}, stopping search`);
-          break; // Stop pagination but return what we have
-        }
-
-        // For other errors, log and continue to next page
-        console.error(`[Movies API] Error on page ${page}:`, {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
-        break; // Stop on any other error
-      }
-    }
-  }
-
-  const allMovies = Array.from(movieMap.values());
-
-  return {
-    success: true,
-    data: allMovies,
-    message: `Search completed (${allMovies.length} unique results)`
-  };
+export const searchMovies = async (query: string, page: number = 1, token?: string): Promise<MoviesResponse> => {
+  // Delegate to getMovies with search parameter
+  return getMovies({ search: query, page, token });
 };
 
 /**

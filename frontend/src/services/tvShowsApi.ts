@@ -76,28 +76,38 @@ export interface TVShowsResponse {
   success: boolean;
   message: string;
   data?: TVShow[];
+  page?: number;
+  pageSize?: number;
+  totalResults?: number;
+  totalPages?: number;
 }
 
 /**
  * Get all TV shows or search TV shows
  * GET /series
+ * Server-side pagination - fetches only one page at a time
  */
 export const getTVShows = async (params?: {
   search?: string;
   genre?: string;
   year?: number;
+  page?: number;
   limit?: number;
   offset?: number;
   token?: string;
 }): Promise<TVShowsResponse> => {
   try {
+    const pageSize = params?.limit || 20; // Default to 20 items per page
+    const currentPage = params?.page || 1;
+    const offset = (currentPage - 1) * pageSize;
+
     const config: any = {
       params: {
-        limit: params?.limit || 100, // Default to 100 results instead of API's default 10
-        ...(params?.search && { search: params.search }),
+        limit: pageSize,
+        offset: offset,
+        ...(params?.search && { name: params.search }), // TV Shows API uses 'name' parameter for search
         ...(params?.genre && { genre: params.genre }),
-        ...(params?.year && { year: params.year }),
-        ...(params?.offset && { offset: params.offset })
+        ...(params?.year && { year: params.year })
       }
     };
 
@@ -111,10 +121,18 @@ export const getTVShows = async (params?: {
     const response = await tvShowsApi.get('/series', config);
     console.log('[TV Shows API] Series response:', response.data);
 
+    const shows = response.data.data || response.data.series || response.data.results || [];
+    const total = response.data.total || response.data.totalResults || shows.length;
+    const totalPages = Math.ceil(total / pageSize);
+
     return {
       success: response.data.success !== false,
       message: response.data.message || 'TV shows retrieved successfully',
-      data: response.data.data || response.data.series || response.data.results || []
+      data: shows,
+      page: currentPage,
+      pageSize: pageSize,
+      totalResults: total,
+      totalPages: totalPages
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -128,7 +146,11 @@ export const getTVShows = async (params?: {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch TV shows',
-        data: []
+        data: [],
+        page: 1,
+        pageSize: 0,
+        totalResults: 0,
+        totalPages: 0
       };
     }
 
@@ -136,7 +158,11 @@ export const getTVShows = async (params?: {
     return {
       success: false,
       message: 'Network error',
-      data: []
+      data: [],
+      page: 1,
+      pageSize: 0,
+      totalResults: 0,
+      totalPages: 0
     };
   }
 };
@@ -181,46 +207,11 @@ export const getTVShowById = async (id: string | number, token?: string): Promis
 /**
  * Search TV shows by name
  * GET /series?name=query
+ * Server-side pagination - fetches only one page at a time
  */
-export const searchTVShows = async (query: string, token?: string): Promise<TVShowsResponse> => {
-  try {
-    const config: any = {
-      params: {
-        name: query // Use 'name' parameter instead of 'search'
-      }
-    };
-
-    // Add authorization header if token is provided
-    if (token) {
-      config.headers = {
-        Authorization: `Bearer ${token}`
-      };
-    }
-
-    // Use /series with search parameter (not /series/search)
-    const response = await tvShowsApi.get('/series', config);
-
-    console.log('[TV Shows API] Search response:', response.data);
-
-    return {
-      success: response.data.success !== false,
-      message: response.data.message || 'Search completed successfully',
-      data: response.data.data || response.data.series || response.data.results || []
-    };
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('[TV Shows API] Search error:', {
-        status: error.response?.status,
-        data: error.response?.data
-      });
-    }
-
-    return {
-      success: false,
-      message: 'Failed to search TV shows',
-      data: []
-    };
-  }
+export const searchTVShows = async (query: string, page: number = 1, token?: string): Promise<TVShowsResponse> => {
+  // Delegate to getTVShows with search parameter
+  return getTVShows({ search: query, page, token });
 };
 
 /**
