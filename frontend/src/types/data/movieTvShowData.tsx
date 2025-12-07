@@ -19,7 +19,10 @@ export type MovieTvShow = {
   genre: string[];
   rating: string;
   duration?: string;
+  runtime?: number; // Runtime in minutes (for filtering)
   seasons?: string;
+  episodes?: number; // Number of episodes (for filtering TV shows)
+  status?: string; // TV show status (Ended, Returning Series, etc.)
   studio?: string;
   network?: string;
   boxOffice?: string;
@@ -64,6 +67,7 @@ export const normalizeMovie = (movie: Movie): MovieTvShow => {
     genre: Array.isArray(genres) ? genres : [],
     rating: mpaRating,
     duration: runtime ? `${runtime} minutes` : undefined,
+    runtime: typeof runtime === 'string' ? parseInt(runtime) : runtime,
     studio: movie.studio,
     boxOffice: movie.boxOffice,
     cast:
@@ -75,6 +79,8 @@ export const normalizeMovie = (movie: Movie): MovieTvShow => {
 };
 
 export const normalizeTVShow = (show: TVShow): MovieTvShow => {
+  const episodeCount = typeof show.episodes === 'string' ? parseInt(show.episodes) : show.episodes;
+
   return {
     id: String(show.iD || show.id),
     type: 'tvshow',
@@ -92,6 +98,8 @@ export const normalizeTVShow = (show: TVShow): MovieTvShow => {
     genre: Array.isArray(show.genres) ? show.genres : show.genre || [],
     rating: show.rating || (show.tMDbRating ? `${show.tMDbRating}/10` : ''),
     seasons: show.seasons ? `${show.seasons} season${Number(show.seasons) > 1 ? 's' : ''}` : undefined,
+    episodes: episodeCount,
+    status: show.status,
     network: show.networks || show.network,
     cast:
       show.cast?.map((c) => ({

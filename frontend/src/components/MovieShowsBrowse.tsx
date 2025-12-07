@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { getMovies, Genre } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 /**
  * Renders the hero section with title, search bar, and action buttons
@@ -99,23 +100,47 @@ function getHeader(
 
 const MovieShowsBrowse = () => {
   const ITEMS_PER_PAGE = 20;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize state from URL parameters
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [allMoviesShows, setAllMoviesShows] = useState<MovieTvShow[]>([]);
+  const [allFilteredResults, setAllFilteredResults] = useState<MovieTvShow[]>([]); // Store all filtered results for client-side pagination
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
   const [moviePages, setMoviePages] = useState(0);
   const [tvPages, setTvPages] = useState(0);
+  const [clientFilterPages, setClientFilterPages] = useState(0);
   const [apiErrors, setApiErrors] = useState<{ movies?: string; tvShows?: string }>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string>(searchParams.get('genre') || '');
+  const [selectedYear, setSelectedYear] = useState<string>(searchParams.get('year') || '');
+  const [selectedRating, setSelectedRating] = useState<string>(searchParams.get('rating') || '');
+  const [selectedRuntime, setSelectedRuntime] = useState<string>(searchParams.get('runtime') || '');
+  const [selectedStatus, setSelectedStatus] = useState<string>(searchParams.get('status') || '');
   const [genres, setGenres] = useState<Genre[]>([]);
   const [unfilteredMoviesShows, setUnfilteredMoviesShows] = useState<MovieTvShow[]>([]);
   const { data: session } = useSession();
 
   const token = (session?.user as any)?.accessToken;
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedGenre) params.set('genre', selectedGenre);
+    if (selectedYear) params.set('year', selectedYear);
+    if (selectedRating) params.set('rating', selectedRating);
+    if (selectedRuntime) params.set('runtime', selectedRuntime);
+    if (selectedStatus) params.set('status', selectedStatus);
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `/browse?${queryString}` : '/browse';
+    router.replace(newUrl, { scroll: false });
+  }, [searchQuery, selectedGenre, selectedYear, selectedRating, selectedRuntime, selectedStatus, router]);
 
   // Extract unique genres from ALL movies (not filtered ones)
   useEffect(() => {
@@ -144,13 +169,23 @@ const MovieShowsBrowse = () => {
   // Fetch data with server-side pagination
   useEffect(() => {
     const fetchData = async () => {
+      // Check if we have client-side filters active
+      const hasClientSideFilter = selectedGenre || selectedRating || selectedRuntime || selectedStatus;
+
+      // If client-side filters are active AND we already have cached results, skip fetching
+      // (we only refetch when filters change, not when page changes)
+      if (hasClientSideFilter && allFilteredResults.length > 0 && currentPage > 1) {
+        // Already have cached filtered results, pagination is handled by separate useEffect
+        return;
+      }
+
       setLoading(true);
       setApiErrors({});
 
       try {
-        // When genre filter is active, fetch multiple pages to ensure we get enough results
-        // since genre filtering is done client-side
-        const pagesToFetch = selectedGenre ? 5 : 1; // Fetch 5 pages (100 items) when filtering by genre
+        // When any client-side filter is active, fetch multiple pages to ensure we get enough results
+        // since these filters are done client-side
+        const pagesToFetch = hasClientSideFilter ? 5 : 1; // Fetch 5 pages (100 items) when filtering
         const fetchPromises = [];
         
         for (let i = 0; i < pagesToFetch; i++) {
@@ -231,7 +266,13 @@ const MovieShowsBrowse = () => {
           moviesCount: normalizedMovies.length,
           tvShowsCount: normalizedTVShows.length,
           pagesFetched: pagesToFetch,
-          genreFilter: selectedGenre || 'none'
+          filters: {
+            genre: selectedGenre || 'none',
+            year: selectedYear || 'none',
+            rating: selectedRating || 'none',
+            runtime: selectedRuntime || 'none',
+            status: selectedStatus || 'none'
+          }
         });
 
         // Remove duplicates by movie_id/id before any filtering
@@ -289,13 +330,82 @@ const MovieShowsBrowse = () => {
           );
         }
 
+        // Apply rating filter client-side (for movies ONLY - MPA rating)
+        if (selectedRating) {
+          normalizedMovies = normalizedMovies.filter(
+            (movie) => movie.rating && movie.rating.toUpperCase() === selectedRating.toUpperCase()
+          );
+          // When rating filter is active, exclude ALL TV shows since rating only applies to movies
+          normalizedTVShows = [];
+        }
+
+        // Apply status filter client-side (for TV shows ONLY)
+        if (selectedStatus) {
+          normalizedTVShows = normalizedTVShows.filter(
+            (show: any) => show.status && show.status.toLowerCase() === selectedStatus.toLowerCase()
+          );
+          // When status filter is active, exclude ALL movies since status only applies to TV shows
+          normalizedMovies = [];
+        }
+
+        // Apply runtime filter client-side
+        if (selectedRuntime) {
+          normalizedMovies = normalizedMovies.filter((movie: any) => {
+            const runtime = typeof movie.runtime === 'string' ? parseInt(movie.runtime) : movie.runtime;
+            if (!runtime || isNaN(runtime)) return false;
+
+            switch (selectedRuntime) {
+              case 'short':
+                return runtime < 90;
+              case 'medium':
+                return runtime >= 90 && runtime <= 150;
+              case 'long':
+                return runtime > 150;
+              default:
+                return true;
+            }
+          });
+
+          normalizedTVShows = normalizedTVShows.filter((show: any) => {
+            // For TV shows, we'll use episode count as a proxy for "runtime"
+            const episodes = typeof show.episodes === 'string' ? parseInt(show.episodes) : show.episodes;
+            if (!episodes || isNaN(episodes)) return false;
+
+            switch (selectedRuntime) {
+              case 'short':
+                return episodes < 20;
+              case 'medium':
+                return episodes >= 20 && episodes <= 100;
+              case 'long':
+                return episodes > 100;
+              default:
+                return true;
+            }
+          });
+        }
+
         // Combine filtered results and sort by title
         const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) => a.title.localeCompare(b.title));
 
-        // When genre filter is active, limit to 20 results per "page"
-        const displayResults = selectedGenre 
-          ? combined.slice(0, ITEMS_PER_PAGE)
-          : combined;
+        // When any client-side filter is active, store all filtered results and paginate locally
+        let displayResults = combined;
+        let clientSidePages = 1;
+
+        if (hasClientSideFilter) {
+          // Store ALL filtered results for client-side pagination
+          setAllFilteredResults(combined);
+
+          // Calculate total pages based on filtered results
+          clientSidePages = Math.ceil(combined.length / ITEMS_PER_PAGE);
+
+          // Show only the current page's worth of filtered results
+          const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          displayResults = combined.slice(startIndex, endIndex);
+        } else {
+          // No client-side filter: clear the cached filtered results
+          setAllFilteredResults([]);
+        }
 
         const combinedTotalResults = movieTotal + tvTotal;
         console.log('[Browse] Combined results:', {
@@ -315,6 +425,7 @@ const MovieShowsBrowse = () => {
         setTotalResults(combinedTotalResults);
         setMoviePages(moviePageCount);
         setTvPages(tvPageCount);
+        setClientFilterPages(clientSidePages);
         setApiErrors(errors);
       } catch (error) {
         console.error('Error fetching movies and TV shows:', error);
@@ -327,37 +438,51 @@ const MovieShowsBrowse = () => {
     };
 
     fetchData();
-  }, [debouncedSearchQuery, currentPage, selectedYear, selectedGenre, token]);
+  }, [debouncedSearchQuery, currentPage, selectedYear, selectedGenre, selectedRating, selectedRuntime, selectedStatus, token, allFilteredResults.length]);
 
   // Reset to page 1 when search query or filters change
-  useEffect(() => setCurrentPage(1), [debouncedSearchQuery, selectedYear, selectedGenre]);
+  useEffect(() => setCurrentPage(1), [debouncedSearchQuery, selectedYear, selectedGenre, selectedRating, selectedRuntime, selectedStatus]);
 
-  // Calculate total pages - only if we have reliable data from BOTH APIs
-  // Note: Movies API doesn't provide totalPages/totalResults, only TV Shows API does
+  // Handle client-side pagination: when page changes and we have cached filtered results, just re-paginate
+  useEffect(() => {
+    const hasClientSideFilter = selectedRating || selectedStatus || selectedRuntime;
+    if (hasClientSideFilter && allFilteredResults.length > 0) {
+      // We have cached filtered results, just paginate them locally without re-fetching
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const paginatedResults = allFilteredResults.slice(startIndex, endIndex);
+      setAllMoviesShows(paginatedResults);
+    }
+  }, [currentPage, allFilteredResults, selectedRating, selectedStatus, selectedRuntime]);
+
+  // Calculate total pages
+  const hasClientSideFilter = selectedRating || selectedStatus || selectedRuntime;
   const hasBothPaginationInfo = moviePages > 0 && tvPages > 0;
   const hasAnyPaginationInfo = moviePages > 0 || tvPages > 0;
 
-  // If both APIs provide pagination info, we can show accurate total pages
-  // Otherwise, we can only estimate or not show total
   let totalPages = 0;
+  let showTotalPages = false; // Only show "of X" when we have reliable page count
 
-  if (hasBothPaginationInfo) {
+  if (hasClientSideFilter && clientFilterPages > 0) {
+    // Client-side filter active: use the calculated pages from filtered results
+    totalPages = clientFilterPages;
+    showTotalPages = true; // We know exact page count for filtered results
+  } else if (hasBothPaginationInfo) {
     // Both APIs provide info - use the max
     totalPages = Math.max(moviePages, tvPages);
+    showTotalPages = true; // Both APIs provided reliable info
   } else if (hasAnyPaginationInfo && totalResults > 0) {
     // Only one API provides info - estimate from total results
-    // This won't be accurate since Movies API doesn't provide total
     totalPages = Math.ceil(totalResults / ITEMS_PER_PAGE);
+    showTotalPages = false; // Don't show "of X" when we're estimating (Movies API doesn't provide total)
   }
 
-  // Enable next page logic:
-  // Since Movies API doesn't provide pagination info, we need to be lenient:
-  // - If we DON'T have complete pagination info from both APIs, allow next as long as we got results
-  // - If we DO have complete pagination info, use the calculated totalPages
-  // - Only disable next if we got 0 results (clearly at the end)
-  const hasNextPage = !hasBothPaginationInfo
-    ? allMoviesShows.length > 0  // No complete pagination info: allow next if we got any results
-    : currentPage < totalPages;   // Complete pagination info: use calculated total pages
+  // Enable next page logic
+  const hasNextPage = hasClientSideFilter
+    ? currentPage < clientFilterPages  // Client-side filters: use filtered page count
+    : !hasBothPaginationInfo
+      ? allMoviesShows.length >= ITEMS_PER_PAGE  // No complete pagination info: allow next if we got a full page
+      : currentPage < totalPages;   // Complete pagination info: use calculated total pages
 
   const goNextPage = () => setCurrentPage(prev => prev + 1);
   const goPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -365,9 +490,12 @@ const MovieShowsBrowse = () => {
   const clearFilters = () => {
     setSelectedGenre('');
     setSelectedYear('');
+    setSelectedRating('');
+    setSelectedRuntime('');
+    setSelectedStatus('');
   };
 
-  const hasActiveFilters = selectedGenre || selectedYear;
+  const hasActiveFilters = selectedGenre || selectedYear || selectedRating || selectedRuntime || selectedStatus;
 
   // Generate year options (last 100 years)
   const currentYear = new Date().getFullYear();
@@ -398,7 +526,7 @@ const MovieShowsBrowse = () => {
               )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Year Filter */}
               <div>
                 <label htmlFor="year-filter" className="block text-sm font-medium text-gray-300 mb-2">
@@ -418,7 +546,7 @@ const MovieShowsBrowse = () => {
                 </select>
               </div>
 
-              {/* Genre Filter - Placeholder for future implementation */}
+              {/* Genre Filter */}
               <div>
                 <label htmlFor="genre-filter" className="block text-sm font-medium text-gray-300 mb-2">
                   Genre
@@ -436,9 +564,68 @@ const MovieShowsBrowse = () => {
                     <option key={genre.genre_id} value={genre.name} className="bg-gray-800 text-white">{genre.name}</option>
                   ))}
                 </select>
-                {genres.length === 0 && (
-                  <p className="text-xs text-gray-400 mt-1">Genre filtering coming soon</p>
-                )}
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label htmlFor="rating-filter" className="block text-sm font-medium text-gray-300 mb-2">
+                  Movie Rating
+                </label>
+                <select
+                  id="rating-filter"
+                  value={selectedRating}
+                  onChange={(e) => setSelectedRating(e.target.value)}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="" className="bg-gray-800 text-white">All Ratings</option>
+                  <option value="G" className="bg-gray-800 text-white">G - General Audiences</option>
+                  <option value="PG" className="bg-gray-800 text-white">PG - Parental Guidance</option>
+                  <option value="PG-13" className="bg-gray-800 text-white">PG-13 - Parents Cautioned</option>
+                  <option value="R" className="bg-gray-800 text-white">R - Restricted</option>
+                  <option value="NC-17" className="bg-gray-800 text-white">NC-17 - Adults Only</option>
+                  <option value="NR" className="bg-gray-800 text-white">NR - Not Rated</option>
+                </select>
+              </div>
+
+              {/* Status Filter (for TV Shows) */}
+              <div>
+                <label htmlFor="status-filter" className="block text-sm font-medium text-gray-300 mb-2">
+                  TV Show Status
+                </label>
+                <select
+                  id="status-filter"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="" className="bg-gray-800 text-white">All Status</option>
+                  <option value="Ended" className="bg-gray-800 text-white">Ended</option>
+                  <option value="Returning Series" className="bg-gray-800 text-white">Returning Series</option>
+                  <option value="Canceled" className="bg-gray-800 text-white">Canceled</option>
+                  <option value="In Production" className="bg-gray-800 text-white">In Production</option>
+                  <option value="Planned" className="bg-gray-800 text-white">Planned</option>
+                </select>
+              </div>
+
+              {/* Runtime/Length Filter */}
+              <div>
+                <label htmlFor="runtime-filter" className="block text-sm font-medium text-gray-300 mb-2">
+                  Length
+                </label>
+                <select
+                  id="runtime-filter"
+                  value={selectedRuntime}
+                  onChange={(e) => setSelectedRuntime(e.target.value)}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="" className="bg-gray-800 text-white">All Lengths</option>
+                  <option value="short" className="bg-gray-800 text-white">Short (&lt;90min / &lt;20 episodes)</option>
+                  <option value="medium" className="bg-gray-800 text-white">Medium (90-150min / 20-100 episodes)</option>
+                  <option value="long" className="bg-gray-800 text-white">Long (&gt;150min / &gt;100 episodes)</option>
+                </select>
               </div>
             </div>
 
@@ -463,6 +650,42 @@ const MovieShowsBrowse = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedGenre('')}
+                      className="hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                )}
+                {selectedRating && (
+                  <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                    Rating: {selectedRating}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRating('')}
+                      className="hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                )}
+                {selectedStatus && (
+                  <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                    Status: {selectedStatus}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStatus('')}
+                      className="hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                )}
+                {selectedRuntime && (
+                  <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                    Length: {selectedRuntime.charAt(0).toUpperCase() + selectedRuntime.slice(1)}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRuntime('')}
                       className="hover:text-white"
                     >
                       <X size={14} />
@@ -513,7 +736,7 @@ const MovieShowsBrowse = () => {
               {/* Top Pagination Controls */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-400 hidden sm:inline">
-                  Page {currentPage}
+                  Page {currentPage}{showTotalPages && totalPages > 0 ? ` of ${totalPages}` : ''}
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -563,7 +786,7 @@ const MovieShowsBrowse = () => {
                 </button>
 
                 <span className="text-sm font-semibold text-white">
-                  Page {currentPage}
+                  Page {currentPage}{showTotalPages && totalPages > 0 ? ` of ${totalPages}` : ''}
                 </span>
 
                 <button
