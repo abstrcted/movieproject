@@ -1,7 +1,7 @@
 // TV Shows API Service
 import axios, { AxiosError } from 'axios';
 
-const TV_API_URL = process.env.TV_API_URL || 'https://group3-datasetwebapi.onrender.com';
+const TV_API_URL = process.env.NEXT_PUBLIC_TV_API_URL || 'https://group3-datasetwebapi.onrender.com';
 
 // Create axios instance with default config
 const tvShowsApi = axios.create({

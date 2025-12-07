@@ -1,8 +1,8 @@
 // Movies API Service
 import axios, { AxiosError } from 'axios';
 
-const MOVIES_API_URL = process.env.MOVIES_API_URL || 'https://tcss460-moviewebapi-t961.onrender.com';
-const MOVIES_API_KEY = process.env.MOVIES_API_KEY || 'movie_api_key_2025';
+const MOVIES_API_URL = process.env.NEXT_PUBLIC_MOVIES_API_URL || 'https://tcss460-moviewebapi-t961.onrender.com';
+const MOVIES_API_KEY = process.env.NEXT_PUBLIC_MOVIES_API_KEY || 'movie_api_key_2025';
 
 console.log('[Movies API] Using base URL:', MOVIES_API_URL);
 console.log('[Movies API] Using API key:', MOVIES_API_KEY);
@@ -89,6 +89,17 @@ export interface MoviesResponse {
   totalPages?: number;
 }
 
+export interface Genre {
+  genre_id: number;
+  name: string;
+}
+
+export interface GenresResponse {
+  success: boolean;
+  data: Genre[];
+  message?: string;
+}
+
 /**
  * Get all movies or search movies
  * GET /movies/title?q=&page=
@@ -105,6 +116,83 @@ export const getMovies = async (params?: {
   token?: string;
 }): Promise<MoviesResponse> => {
   try {
+    // If year filter is provided, use /moviesbyyear to get the list, 
+    // then fetch full details with posters from /movies/title
+    if (params?.year) {
+      const yearResponse = await moviesApi.get('/moviesbyyear', {
+        params: { year: params.year },
+        headers: params.token ? { Authorization: `Bearer ${params.token}` } : {}
+      });
+      
+      console.log(`[Movies API] /moviesbyyear response for ${params.year}:`, yearResponse.data);
+      
+      if (yearResponse.data.movies && Array.isArray(yearResponse.data.movies)) {
+        const yearMovies = yearResponse.data.movies;
+        const requestedYear = params.year;
+        
+        console.log(`[Movies API] /moviesbyyear returned ${yearMovies.length} movies for ${requestedYear}`);
+        
+        // Create a Set of valid movie IDs from the year response
+        const validMovieIds = new Set(yearMovies.map((m: any) => m.movie_id));
+        
+        // Fetch full details for each movie to get poster URLs
+        const detailPromises = yearMovies.map((movie: any) => 
+          moviesApi.get('/movies/title', {
+            params: { q: movie.movie_id },
+            headers: params.token ? { Authorization: `Bearer ${params.token}` } : {}
+          }).catch(err => {
+            console.warn(`Failed to fetch details for movie ${movie.movie_id}:`, err.message);
+            return null;
+          })
+        );
+        
+        const detailResponses = await Promise.all(detailPromises);
+        
+        // Merge the detailed data and filter strictly
+        const moviesWithDetails = detailResponses
+          .filter(res => res && res.data.results && res.data.results.length > 0)
+          .flatMap(res => res.data.results) // Get all results from the response
+          .filter(movie => {
+            // STRICT FILTER: Only include if movie_id is in our valid set from /moviesbyyear
+            const isValid = validMovieIds.has(movie.movie_id);
+            if (!isValid) {
+              console.warn(`Filtered out movie "${movie.title}" (ID: ${movie.movie_id}) - not in year ${requestedYear} response`);
+            }
+            return isValid;
+          })
+          .map(movie => {
+            // Map cast format
+            if (movie.cast && Array.isArray(movie.cast)) {
+              movie.cast = movie.cast.map((c: any) => ({
+                name: c.actor_name,
+                character: c.character_name
+              }));
+            }
+            return movie;
+          });
+        
+        // Remove duplicates by movie_id
+        const uniqueMovies = Array.from(
+          new Map(moviesWithDetails.map(m => [m.movie_id, m])).values()
+        );
+        
+        console.log(`[Movies API] Enriched ${uniqueMovies.length} unique movies with poster details for year ${requestedYear}`);
+        
+        return {
+          success: true,
+          data: uniqueMovies,
+          page: 1,
+          pageSize: uniqueMovies.length,
+          totalResults: yearResponse.data.count || uniqueMovies.length,
+          totalPages: 1,
+          message: `Movies fetched successfully for year ${params.year}`
+        };
+      }
+    }
+    
+    // Use /movies/title for all other cases (includes full details with posters)
+    const endpoint = '/movies/title';
+    
     const config: any = {
       params: {
         q: params?.search || '', // Empty q to get all movies, or search term
@@ -119,8 +207,8 @@ export const getMovies = async (params?: {
       };
     }
 
-    const response = await moviesApi.get('/movies/title', config);
-    console.log(`[Movies API] Movies response:`, response.data);
+    const response = await moviesApi.get(endpoint, config);
+    console.log(`[Movies API] ${endpoint} response:`, response.data);
 
     // Handle response format - API returns {page, pageSize, results: [...]}
     if (response.data.results && Array.isArray(response.data.results)) {
@@ -138,10 +226,10 @@ export const getMovies = async (params?: {
       return {
         success: true,
         data: movies,
-        page: response.data.page,
-        pageSize: response.data.pageSize,
-        totalResults: response.data.totalResults || 0, // API doesn't always provide this
-        totalPages: response.data.totalPages || 0, // API doesn't always provide this
+        page: response.data.page || 1,
+        pageSize: response.data.pageSize || movies.length,
+        totalResults: response.data.totalResults || 0,
+        totalPages: response.data.totalPages || 0,
         message: `Movies fetched successfully`
       };
     }
@@ -247,6 +335,46 @@ export const getMovieById = async (id: string | number, token?: string): Promise
 export const searchMovies = async (query: string, page: number = 1, token?: string): Promise<MoviesResponse> => {
   // Delegate to getMovies with search parameter
   return getMovies({ search: query, page, token });
+};
+
+/**
+ * Get all genres
+ * GET /genres
+ */
+export const getGenres = async (token?: string): Promise<GenresResponse> => {
+  try {
+    const config: any = {};
+
+    // Add authorization header if token is provided
+    if (token) {
+      config.headers = {
+        Authorization: `Bearer ${token}`
+      };
+    }
+
+    const response = await moviesApi.get('/genres', config);
+    console.log('[Movies API] Genres response:', response.data);
+
+    return {
+      success: true,
+      data: response.data.data || response.data.results || response.data || [],
+      message: 'Genres fetched successfully'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Movies API] Error fetching genres:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+
+    return {
+      success: false,
+      data: [],
+      message: 'Failed to fetch genres'
+    };
+  }
 };
 
 /**

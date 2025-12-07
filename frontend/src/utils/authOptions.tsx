@@ -50,7 +50,8 @@ export const authOptions: NextAuthOptions = {
               name: response.data.user.username,
               username: response.data.user.username,
               token: accessToken,
-              role: response.data.user.role
+              role: response.data.user.role,
+              emailVerified: response.data.user.emailVerified || false
             } as any;
           } else {
             throw new Error(response.message || 'Authentication failed');
@@ -71,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         token.username = (user as any).username;
         token.accessToken = (user as any).token;
         token.role = (user as any).role;
+        token.emailVerified = (user as any).emailVerified;
       }
       return token;
     },
@@ -85,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         user.username = token.username;
         user.accessToken = token.accessToken;
         user.role = token.role;
+        user.emailVerified = token.emailVerified;
       }
       return session;
     }

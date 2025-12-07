@@ -3,17 +3,22 @@
 import { MovieTvShow, normalizeMovie, normalizeTVShow } from '@/types/data/movieTvShowData';
 import MovieTvShowCard from './MovieTvShowCard';
 import WatchlistPanel from './WatchlistPanel';
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Plus, Film, Tv } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Plus, Film, Tv, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { getMovies, searchMovies } from '@/services/moviesApi';
+import { getMovies, getGenres, Genre } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
 import Link from 'next/link';
 
 /**
  * Renders the hero section with title, search bar, and action buttons
  */
-function getHeader(searchQuery: string, setSearchQuery: (query: string) => void) {
+function getHeader(
+  searchQuery: string, 
+  setSearchQuery: (query: string) => void,
+  showFilters: boolean,
+  setShowFilters: (show: boolean) => void
+) {
   return (
     <div className="relative w-full h-[500px] flex flex-col justify-center">
       {/* Background Image with Fade Overlay */}
@@ -76,8 +81,13 @@ function getHeader(searchQuery: string, setSearchQuery: (query: string) => void)
           {/* Filters Button */}
           <button
             type="button"
-            className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium transition-colors border border-white/10"
-            aria-label="Open filters"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`hidden sm:flex items-center gap-2 backdrop-blur-md px-6 py-3 rounded-full font-medium transition-colors border ${
+              showFilters 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600' 
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/10'
+            }`}
+            aria-label="Toggle filters"
           >
             Filters <SlidersHorizontal size={18} />
           </button>
@@ -98,9 +108,29 @@ const MovieShowsBrowse = () => {
   const [moviePages, setMoviePages] = useState(0);
   const [tvPages, setTvPages] = useState(0);
   const [apiErrors, setApiErrors] = useState<{ movies?: string; tvShows?: string }>({});
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [unfilteredMoviesShows, setUnfilteredMoviesShows] = useState<MovieTvShow[]>([]);
   const { data: session } = useSession();
 
   const token = (session?.user as any)?.accessToken;
+
+  // Extract unique genres from ALL movies (not filtered ones)
+  useEffect(() => {
+    const uniqueGenres = new Set<string>();
+    unfilteredMoviesShows.forEach(item => {
+      if (item.genre && Array.isArray(item.genre)) {
+        item.genre.forEach(g => uniqueGenres.add(g));
+      }
+    });
+    const genresArray = Array.from(uniqueGenres).sort().map((name, index) => ({ 
+      genre_id: index + 1, 
+      name 
+    }));
+    setGenres(genresArray);
+  }, [unfilteredMoviesShows]);
 
   // Debounce search query
   useEffect(() => {
@@ -118,19 +148,48 @@ const MovieShowsBrowse = () => {
       setApiErrors({});
 
       try {
-        // Fetch movies and TV shows separately to handle individual failures
-        const moviesPromise = debouncedSearchQuery
-          ? searchMovies(debouncedSearchQuery, currentPage, token)
-          : getMovies({ page: currentPage, limit: ITEMS_PER_PAGE, token });
+        // When genre filter is active, fetch multiple pages to ensure we get enough results
+        // since genre filtering is done client-side
+        const pagesToFetch = selectedGenre ? 5 : 1; // Fetch 5 pages (100 items) when filtering by genre
+        const fetchPromises = [];
+        
+        for (let i = 0; i < pagesToFetch; i++) {
+          const pageNum = currentPage + i;
+          
+          // Build filter params
+          const movieParams: any = { 
+            page: pageNum, 
+            limit: ITEMS_PER_PAGE, 
+            token 
+          };
+          
+          // Add year filter if selected - API will return only movies from that year
+          if (selectedYear) {
+            movieParams.year = parseInt(selectedYear);
+          }
+          
+          // Add search query if provided (not compatible with year filter on this API)
+          if (debouncedSearchQuery && !selectedYear) {
+            movieParams.search = debouncedSearchQuery;
+          }
 
-        const tvShowsPromise = debouncedSearchQuery
-          ? searchTVShows(debouncedSearchQuery, currentPage, token)
-          : getTVShows({ page: currentPage, limit: ITEMS_PER_PAGE, token });
+          // Fetch movies
+          const moviesPromise = getMovies(movieParams);
 
-        const [moviesResponse, tvShowsResponse] = await Promise.allSettled([
-          moviesPromise,
-          tvShowsPromise
-        ]);
+          // Don't fetch TV shows when year filter is active (year filter is movie-specific)
+          const tvShowsPromise = debouncedSearchQuery
+            ? searchTVShows(debouncedSearchQuery, pageNum, token)
+            : getTVShows({ page: pageNum, limit: ITEMS_PER_PAGE, token });
+
+          fetchPromises.push(
+            Promise.allSettled([
+              moviesPromise,
+              selectedYear ? Promise.resolve({ success: true, data: [] }) : tvShowsPromise
+            ])
+          );
+        }
+
+        const allPagesResults = await Promise.all(fetchPromises);
 
         let normalizedMovies: any[] = [];
         let normalizedTVShows: any[] = [];
@@ -140,48 +199,82 @@ const MovieShowsBrowse = () => {
         let tvPageCount = 0;
         const errors: { movies?: string; tvShows?: string } = {};
 
-        // Handle movies response
-        if (moviesResponse.status === 'fulfilled' && moviesResponse.value.success) {
-          normalizedMovies = (moviesResponse.value.data || []).map(normalizeMovie);
-          movieTotal = moviesResponse.value.totalResults || 0;
-          moviePageCount = moviesResponse.value.totalPages || 0;
-          console.log('[Browse] Movies pagination:', {
-            page: moviesResponse.value.page,
-            pageSize: moviesResponse.value.pageSize,
-            totalResults: movieTotal,
-            totalPages: moviePageCount,
-            itemsReceived: normalizedMovies.length
-          });
-        } else {
-          errors.movies = 'Movies API is currently unavailable';
-          console.error('Movies API error:', moviesResponse.status === 'rejected' ? moviesResponse.reason : moviesResponse.value.message);
+        // Process all fetched pages
+        for (const [moviesResponse, tvShowsResponse] of allPagesResults) {
+          // Handle movies response
+          if (moviesResponse.status === 'fulfilled' && moviesResponse.value.success) {
+            const movies = (moviesResponse.value.data || []).map(normalizeMovie);
+            normalizedMovies.push(...movies);
+            movieTotal = moviesResponse.value.totalResults || 0;
+            moviePageCount = moviesResponse.value.totalPages || 0;
+          } else if (!errors.movies) {
+            errors.movies = 'Movies API is currently unavailable';
+            console.error('Movies API error:', moviesResponse.status === 'rejected' ? moviesResponse.reason : moviesResponse.value.message);
+          }
+
+          // Handle TV shows response
+          if (tvShowsResponse.status === 'fulfilled' && tvShowsResponse.value.success) {
+            const shows = (tvShowsResponse.value.data || []).map(normalizeTVShow);
+            normalizedTVShows.push(...shows);
+            tvTotal = tvShowsResponse.value.totalResults || 0;
+            tvPageCount = tvShowsResponse.value.totalPages || 0;
+          } else if (!errors.tvShows) {
+            errors.tvShows = 'TV Shows API is currently unavailable';
+            console.error('TV Shows API error:', tvShowsResponse.status === 'rejected' ? tvShowsResponse.reason : tvShowsResponse.value.message);
+          }
         }
 
-        // Handle TV shows response
-        if (tvShowsResponse.status === 'fulfilled' && tvShowsResponse.value.success) {
-          normalizedTVShows = (tvShowsResponse.value.data || []).map(normalizeTVShow);
-          tvTotal = tvShowsResponse.value.totalResults || 0;
-          tvPageCount = tvShowsResponse.value.totalPages || 0;
-          console.log('[Browse] TV Shows pagination:', {
-            page: tvShowsResponse.value.page,
-            pageSize: tvShowsResponse.value.pageSize,
-            totalResults: tvTotal,
-            totalPages: tvPageCount,
-            itemsReceived: normalizedTVShows.length
-          });
-        } else {
-          errors.tvShows = 'TV Shows API is currently unavailable';
-          console.error('TV Shows API error:', tvShowsResponse.status === 'rejected' ? tvShowsResponse.reason : tvShowsResponse.value.message);
+        console.log('[Browse] Fetched data:', {
+          moviesCount: normalizedMovies.length,
+          tvShowsCount: normalizedTVShows.length,
+          pagesFetched: pagesToFetch,
+          genreFilter: selectedGenre || 'none'
+        });
+
+        // Store unfiltered results first for genre extraction
+        const unfilteredCombined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) => a.title.localeCompare(b.title));
+        setUnfilteredMoviesShows(unfilteredCombined);
+        
+        // Apply client-side filters
+        // Note: Year filtering is done by the API when selectedYear is active
+        
+        // Apply search filter client-side if year filter is active
+        // (because /moviesbyyear doesn't support search parameter)
+        if (selectedYear && debouncedSearchQuery) {
+          const searchLower = debouncedSearchQuery.toLowerCase();
+          normalizedMovies = normalizedMovies.filter((movie) =>
+            movie.title.toLowerCase().includes(searchLower)
+          );
+          normalizedTVShows = normalizedTVShows.filter((show) =>
+            show.title.toLowerCase().includes(searchLower)
+          );
         }
 
-        // Combine and sort by title
+        // Apply genre filter client-side
+        if (selectedGenre) {
+          normalizedMovies = normalizedMovies.filter(
+            (movie) => movie.genre && movie.genre.some((g: string) => g.toLowerCase() === selectedGenre.toLowerCase())
+          );
+          normalizedTVShows = normalizedTVShows.filter(
+            (show) => show.genre && show.genre.some((g: string) => g.toLowerCase() === selectedGenre.toLowerCase())
+          );
+        }
+
+        // Combine filtered results and sort by title
         const combined = [...normalizedMovies, ...normalizedTVShows].sort((a, b) => a.title.localeCompare(b.title));
+
+        // When genre filter is active, limit to 20 results per "page"
+        const displayResults = selectedGenre 
+          ? combined.slice(0, ITEMS_PER_PAGE)
+          : combined;
 
         const combinedTotalResults = movieTotal + tvTotal;
         console.log('[Browse] Combined results:', {
           moviesCount: normalizedMovies.length,
           tvShowsCount: normalizedTVShows.length,
           combinedCount: combined.length,
+          displayCount: displayResults.length,
+          currentPage,
           movieTotal,
           tvTotal,
           combinedTotalResults,
@@ -189,7 +282,7 @@ const MovieShowsBrowse = () => {
           tvPages: tvPageCount
         });
 
-        setAllMoviesShows(combined);
+        setAllMoviesShows(displayResults);
         setTotalResults(combinedTotalResults);
         setMoviePages(moviePageCount);
         setTvPages(tvPageCount);
@@ -205,10 +298,10 @@ const MovieShowsBrowse = () => {
     };
 
     fetchData();
-  }, [debouncedSearchQuery, currentPage, token]);
+  }, [debouncedSearchQuery, currentPage, selectedYear, selectedGenre, token]);
 
-  // Reset to page 1 when search query changes
-  useEffect(() => setCurrentPage(1), [debouncedSearchQuery]);
+  // Reset to page 1 when search query or filters change
+  useEffect(() => setCurrentPage(1), [debouncedSearchQuery, selectedYear, selectedGenre]);
 
   // Calculate total pages - only if we have reliable data from BOTH APIs
   // Note: Movies API doesn't provide totalPages/totalResults, only TV Shows API does
@@ -238,15 +331,120 @@ const MovieShowsBrowse = () => {
     : currentPage < totalPages;   // Complete pagination info: use calculated total pages
 
   const goNextPage = () => setCurrentPage(prev => prev + 1);
-  const goPreviousPage = () => setCurrentPage(prev => prev - 1);
+  const goPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+
+  const clearFilters = () => {
+    setSelectedGenre('');
+    setSelectedYear('');
+  };
+
+  const hasActiveFilters = selectedGenre || selectedYear;
+
+  // Generate year options (last 100 years)
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   return (
     <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white pb-24">
       {/* --- HERO SECTION --- */}
-      {getHeader(searchQuery, setSearchQuery)}
+      {getHeader(searchQuery, setSearchQuery, showFilters, setShowFilters)}
 
       {/* --- MAIN CONTENT SECTION --- */}
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-20 -mt-10 relative z-20">
+        
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mb-6 bg-white/5 backdrop-blur-md rounded-lg p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Filters</h3>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Year Filter */}
+              <div>
+                <label htmlFor="year-filter" className="block text-sm font-medium text-gray-300 mb-2">
+                  Release Year
+                </label>
+                <select
+                  id="year-filter"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="" className="bg-gray-800 text-white">All Years</option>
+                  {yearOptions.map(year => (
+                    <option key={year} value={year} className="bg-gray-800 text-white">{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Genre Filter - Placeholder for future implementation */}
+              <div>
+                <label htmlFor="genre-filter" className="block text-sm font-medium text-gray-300 mb-2">
+                  Genre
+                </label>
+                <select
+                  id="genre-filter"
+                  value={selectedGenre}
+                  onChange={(e) => setSelectedGenre(e.target.value)}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                  style={{ colorScheme: 'dark' }}
+                  disabled={genres.length === 0}
+                >
+                  <option value="" className="bg-gray-800 text-white">All Genres</option>
+                  {genres.map(genre => (
+                    <option key={genre.genre_id} value={genre.name} className="bg-gray-800 text-white">{genre.name}</option>
+                  ))}
+                </select>
+                {genres.length === 0 && (
+                  <p className="text-xs text-gray-400 mt-1">Genre filtering coming soon</p>
+                )}
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {hasActiveFilters && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {selectedYear && (
+                  <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                    Year: {selectedYear}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedYear('')}
+                      className="hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                )}
+                {selectedGenre && (
+                  <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                    Genre: {selectedGenre}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGenre('')}
+                      className="hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-20">
@@ -280,7 +478,6 @@ const MovieShowsBrowse = () => {
                 </h2>
                 <p className="text-white text-xl font-semibold mt-1">
                   Showing {allMoviesShows.length} {allMoviesShows.length === 1 ? 'title' : 'titles'} on this page
-                  {!hasBothPaginationInfo && <span className="text-sm text-gray-400 ml-2">(pagination info unavailable)</span>}
                 </p>
               </div>
 
