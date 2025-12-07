@@ -10,6 +10,18 @@ const MovieTvShowCard = ({ movie }: { movie: MovieTvShow }) => {
   const [isHovered, setIsHovered] = useState(false);
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const inWatchlist = isInWatchlist(movie.id);
+  const [imageError, setImageError] = useState(false);
+  const fallbackImage = 'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster';
+  // Ensure image src is a valid string that Next/Image can handle. If not, use fallback.
+  let imageSrc = fallbackImage;
+  if (movie && typeof movie.image === 'string' && movie.image.trim()) {
+    const src = movie.image.trim();
+    // Accept absolute URLs or root-relative paths
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+      imageSrc = src;
+    }
+  }
+  if (imageError) imageSrc = fallbackImage;
 
   const handleWatchlistToggle = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to detail page
@@ -32,12 +44,15 @@ const MovieTvShowCard = ({ movie }: { movie: MovieTvShow }) => {
         {/* Card Container with aspect ratio */}
         <div className="relative w-full aspect-2/3 overflow-hidden bg-gray-800 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl rounded-lg">
           <Image
-            src={movie.image}
+            src={imageSrc}
             alt={movie.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
             className="object-cover transition-all duration-300 group-hover:brightness-75"
             priority={false}
+            onError={() => setImageError(true)}
+            // If using an external placeholder, avoid Next.js optimization to prevent loader errors
+            unoptimized={imageSrc === fallbackImage}
           />
 
           {/* Watchlist Button - Top Right */}

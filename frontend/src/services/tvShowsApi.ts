@@ -15,7 +15,24 @@ const tvShowsApi = axios.create({
 // Add request interceptor for logging
 tvShowsApi.interceptors.request.use(
   (config) => {
-    console.log(`[TV Shows API] ${config.method?.toUpperCase()} ${config.url}`);
+    try {
+      console.log(`[TV Shows API] ${config.method?.toUpperCase()} ${config.url}`);
+      // Log headers (avoid printing full token) and body for debugging
+      const headersForLog: any = {};
+      if (config.headers) {
+        Object.keys(config.headers).forEach((k) => {
+          if (/authorization|x-access-token/i.test(k)) {
+            headersForLog[k] = String((config.headers as any)[k]).slice(0, 12) + '...';
+          } else {
+            headersForLog[k] = (config.headers as any)[k];
+          }
+        });
+      }
+      console.log('[TV Shows API] Request headers:', headersForLog);
+      if (config.data) console.log('[TV Shows API] Request body:', config.data);
+    } catch (e) {
+      // swallow logging errors
+    }
     return config;
   },
   (error) => {
@@ -27,7 +44,17 @@ tvShowsApi.interceptors.request.use(
 tvShowsApi.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    console.error('[TV Shows API Error]:', error.response?.data || error.message);
+    const info: any = {
+      message: error.message,
+      url: (error.config as any)?.url,
+      method: (error.config as any)?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    };
+    if (!error.response?.data) {
+      console.error('[TV Shows API Error]: no response data; full error:', error);
+    }
+    console.error('[TV Shows API Error]:', info);
     return Promise.reject(error);
   }
 );
@@ -224,31 +251,47 @@ export const createTVShow = async (tvShowData: Partial<TVShow>, token?: string):
 
     // Add authorization header if token is provided
     if (token) {
+      // Some APIs expect different header names; include common variants
+      const apiKeyFromEnv = process.env.NEXT_PUBLIC_TV_API_KEY;
       config.headers = {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-access-token': token,
+        ...(apiKeyFromEnv ? { 'x-api-key': apiKeyFromEnv } : {})
       };
     }
 
     console.log('[TV Shows API] Creating TV show:', tvShowData);
     const response = await tvShowsApi.post('/series', tvShowData, config);
     console.log('[TV Shows API] Create response:', response.data);
+    // If the API returns a standard envelope, return it directly
+    if (response.data && typeof response.data === 'object') {
+      return {
+        success: response.data.success !== false,
+        message: response.data.message || 'TV show created successfully',
+        data: response.data.data ? (Array.isArray(response.data.data) ? response.data.data : [response.data.data]) : (response.data.series ? response.data.series : [])
+      };
+    }
 
+    // Fallback
     return {
       success: true,
       message: 'TV show created successfully',
-      data: response.data.data || [response.data]
+      data: [response.data]
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error('[TV Shows API] Error creating TV show:', {
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
-        message: error.message
+        message: error.message,
+        url: (error.config as any)?.url
       });
 
       return {
         success: false,
-        message: error.response?.data?.message || error.response?.data?.error || 'Failed to create TV show'
+        message: error.response?.data?.message || error.response?.data?.error || (typeof error.response?.data === 'string' ? error.response.data : 'Failed to create TV show'),
+        data: []
       };
     }
 

@@ -69,7 +69,9 @@ export const normalizeMovie = (movie: Movie): MovieTvShow => {
     duration: runtime ? `${runtime} minutes` : undefined,
     runtime: typeof runtime === 'string' ? parseInt(runtime) : runtime,
     studio: movie.studio,
-    boxOffice: movie.boxOffice,
+    boxOffice: movie.revenue 
+      ? `$${movie.revenue.toLocaleString('en-US')}` 
+      : (movie.boxOffice || 'N/A'),
     cast:
       movie.cast?.map((c) => ({
         actor: c.name,

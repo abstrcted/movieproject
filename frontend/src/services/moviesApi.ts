@@ -32,7 +32,21 @@ moviesApi.interceptors.request.use(
 moviesApi.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    console.error('[Movies API Error]:', error.response?.data || error.message);
+    // More detailed error logging to capture empty response bodies and request info
+    const info: any = {
+      message: error.message,
+      url: (error.config as any)?.url,
+      method: (error.config as any)?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    };
+
+    // If Axios provided no response data, include the raw error object for debugging
+    if (!error.response?.data) {
+      console.error('[Movies API Error]: no response data; full error:', error);
+    }
+
+    console.error('[Movies API Error]:', info);
     return Promise.reject(error);
   }
 );

@@ -51,19 +51,59 @@ const CreateTVShowForm = () => {
       setSuccessMessage('');
 
       try {
-        const response = await createTVShow({ ...values, creators }, token);
+        // Normalize payload to match API shape:
+        // - networks and studios should be arrays
+        // - genres should be array (already is)
+        // - creators is maintained separately
+        // - include cast as empty array if not provided
+        const payload = {
+          name: values.name,
+          originalName: values.originalName,
+          firstAirDate: values.firstAirDate,
+          lastAirDate: values.lastAirDate,
+          seasons: Number(values.seasons || 0),
+          episodes: Number(values.episodes || 0),
+          status: values.status,
+          genres: Array.isArray(values.genres) ? values.genres : (values.genres ? [values.genres] : []),
+          overview: values.overview,
+          popularity: Number(values.popularity || 0),
+          tMDbRating: Number(values.tMDbRating || 0),
+          voteCount: Number(values.voteCount || 0),
+          posterURL: values.posterURL || '',
+          backdropURL: values.backdropURL || '',
+          creators: creators || [],
+          networks: values.networks ? [values.networks] : [],
+          studios: (values as any).studios || [],
+          cast: (values as any).cast || []
+        };
 
-        if (response.success) {
-          setSuccessMessage('TV show created successfully!');
+        console.log('[CreateTVShowForm] Creating TV show with normalized payload:', payload);
+        console.log('[CreateTVShowForm] Token present:', !!token, token ? (`startsWith:${String(token).slice(0,8)}...`) : 'no-token');
+
+        const response = await createTVShow(payload, token);
+        console.log('[CreateTVShowForm] createTVShow response:', response);
+
+        if (response && response.success) {
+          setSuccessMessage(response.message || 'TV show created successfully!');
           setTimeout(() => {
             router.push('/browse');
           }, 2000);
         } else {
-          setErrorMessage(response.message || 'Failed to create TV show');
+          // Try to show server-provided message; include full response when helpful
+          const serverMsg = response?.message || (response && JSON.stringify(response)) || 'Failed to create TV show';
+          setErrorMessage(serverMsg);
         }
       } catch (err: unknown) {
-        console.error(err);
-        setErrorMessage('An unexpected error occurred.');
+        // Provide detailed error info in logs and show a helpful message to the user
+        console.error('[CreateTVShowForm] Unexpected error creating TV show:', err);
+        // If axios error, show response body if present
+        const anyErr: any = err as any;
+        if (anyErr?.response) {
+          console.error('[CreateTVShowForm] Error response:', anyErr.response);
+          setErrorMessage(anyErr.response.data?.message || anyErr.response.data || 'Server returned an error');
+        } else {
+          setErrorMessage('An unexpected error occurred. See console for details.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -111,6 +151,18 @@ const CreateTVShowForm = () => {
         {successMessage && (
           <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400">
             {successMessage}
+          </div>
+        )}
+
+        {/* Validation summary (helps debug why submit may do nothing) */}
+        {formik.submitCount > 0 && Object.keys(formik.errors).length > 0 && (
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-300">
+            <strong className="block mb-2">Validation errors:</strong>
+            <ul className="list-disc list-inside text-sm">
+              {Object.entries(formik.errors).map(([k, v]) => (
+                <li key={k}>{k}: {String(v)}</li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -493,6 +545,10 @@ const CreateTVShowForm = () => {
             </button>
             <button
               type="submit"
+              onClick={() => {
+                console.log('[CreateTVShowForm] Submit clicked. values:', formik.values, 'errors before submit:', formik.errors);
+                formik.submitForm();
+              }}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >

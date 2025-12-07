@@ -15,10 +15,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
  * Renders the hero section with title, search bar, and action buttons
  */
 function getHeader(
-  searchQuery: string, 
+  searchQuery: string,
   setSearchQuery: (query: string) => void,
   showFilters: boolean,
-  setShowFilters: (show: boolean) => void
+  setShowFilters: (show: boolean) => void,
+  isAdmin: boolean
 ) {
   return (
     <div className="relative w-full h-[500px] flex flex-col justify-center">
@@ -40,27 +41,29 @@ function getHeader(
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h1 className="text-5xl font-bold text-white tracking-wide drop-shadow-lg">Explore</h1>
 
-          {/* Create Buttons */}
-          <div className="flex gap-3">
-            <Link
-              href="/browse/movie/new"
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-800 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
-              aria-label="Add new movie"
-            >
-              <Plus className="w-5 h-5" />
-              <Film className="w-5 h-5" />
-              <span className="hidden sm:inline">Add Movie</span>
-            </Link>
-            <Link
-              href="/browse/tvshow/new"
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
-              aria-label="Add new TV show"
-            >
-              <Plus className="w-5 h-5" />
-              <Tv className="w-5 h-5" />
-              <span className="hidden sm:inline">Add TV Show</span>
-            </Link>
-          </div>
+          {/* Create Buttons - only visible to admins */}
+            {isAdmin ? (
+              <div className="flex gap-3">
+                <Link
+                  href="/browse/movie/new"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-800 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
+                  aria-label="Add new movie"
+                >
+                  <Plus className="w-5 h-5" />
+                  <Film className="w-5 h-5" />
+                  <span className="hidden sm:inline">Add Movie</span>
+                </Link>
+                <Link
+                  href="/browse/tvshow/new"
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
+                  aria-label="Add new TV show"
+                >
+                  <Plus className="w-5 h-5" />
+                  <Tv className="w-5 h-5" />
+                  <span className="hidden sm:inline">Add TV Show</span>
+                </Link>
+              </div>
+            ) : null}
         </div>
 
         {/* Search Bar Container */}
@@ -126,6 +129,7 @@ const MovieShowsBrowse = () => {
   const { data: session } = useSession();
 
   const token = (session?.user as any)?.accessToken;
+  const isAdmin = Number((session?.user as any)?.id) === 8;
 
   // Update URL when filters change
   useEffect(() => {
@@ -504,7 +508,7 @@ const MovieShowsBrowse = () => {
   return (
     <div className="w-full min-h-screen bg-[#1B1A1A] font-sans text-white pb-24">
       {/* --- HERO SECTION --- */}
-      {getHeader(searchQuery, setSearchQuery, showFilters, setShowFilters)}
+      {getHeader(searchQuery, setSearchQuery, showFilters, setShowFilters, isAdmin)}
 
       {/* --- MAIN CONTENT SECTION --- */}
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-20 -mt-10 relative z-20">

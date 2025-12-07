@@ -94,7 +94,6 @@ const MovieDetailPage = () => {
 
               {/* Meta Info */}
               <div className="text-gray-300 text-base md:text-lg mb-4">
-                <p>Directed by {movie.director}</p>
                 <p>{movie.studio}</p>
                 <p>{movie.year}</p>
                 <p>Runtime: {movie.duration}</p>
