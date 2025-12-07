@@ -194,6 +194,6 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 
 ---
 
-## Alpha Sprint Comments
+## Sprint Comments
 - None:)
 
