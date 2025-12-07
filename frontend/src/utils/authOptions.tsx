@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
               username: response.data.user.username,
               token: accessToken,
               role: response.data.user.role,
-              emailVerified: response.data.user.emailVerified || false
+              emailVerified: (response.data.user as any).emailVerified || false
             } as any;
           } else {
             throw new Error(response.message || 'Authentication failed');

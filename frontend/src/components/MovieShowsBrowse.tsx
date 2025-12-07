@@ -6,7 +6,7 @@ import WatchlistPanel from './WatchlistPanel';
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Plus, Film, Tv, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { getMovies, getGenres, Genre } from '@/services/moviesApi';
+import { getMovies, Genre } from '@/services/moviesApi';
 import { getTVShows, searchTVShows } from '@/services/tvShowsApi';
 import Link from 'next/link';
 
@@ -216,11 +216,14 @@ const MovieShowsBrowse = () => {
           if (tvShowsResponse.status === 'fulfilled' && tvShowsResponse.value.success) {
             const shows = (tvShowsResponse.value.data || []).map(normalizeTVShow);
             normalizedTVShows.push(...shows);
-            tvTotal = tvShowsResponse.value.totalResults || 0;
-            tvPageCount = tvShowsResponse.value.totalPages || 0;
+            // Only set totals if the response has pagination info (not from the empty placeholder)
+            if ('totalResults' in tvShowsResponse.value) {
+              tvTotal = tvShowsResponse.value.totalResults || 0;
+              tvPageCount = tvShowsResponse.value.totalPages || 0;
+            }
           } else if (!errors.tvShows) {
             errors.tvShows = 'TV Shows API is currently unavailable';
-            console.error('TV Shows API error:', tvShowsResponse.status === 'rejected' ? tvShowsResponse.reason : tvShowsResponse.value.message);
+            console.error('TV Shows API error:', tvShowsResponse.status === 'rejected' ? tvShowsResponse.reason : (tvShowsResponse.value as any).message);
           }
         }
 
@@ -229,6 +232,32 @@ const MovieShowsBrowse = () => {
           tvShowsCount: normalizedTVShows.length,
           pagesFetched: pagesToFetch,
           genreFilter: selectedGenre || 'none'
+        });
+
+        // Remove duplicates by movie_id/id before any filtering
+        // This is important when year filter is active because /moviesbyyear returns all movies
+        // for that year regardless of page number, causing duplicates when fetching multiple pages
+        const uniqueMoviesMap = new Map();
+        normalizedMovies.forEach(movie => {
+          const key = movie.id;
+          if (!uniqueMoviesMap.has(key)) {
+            uniqueMoviesMap.set(key, movie);
+          }
+        });
+        normalizedMovies = Array.from(uniqueMoviesMap.values());
+
+        const uniqueTVShowsMap = new Map();
+        normalizedTVShows.forEach(show => {
+          const key = show.id;
+          if (!uniqueTVShowsMap.has(key)) {
+            uniqueTVShowsMap.set(key, show);
+          }
+        });
+        normalizedTVShows = Array.from(uniqueTVShowsMap.values());
+
+        console.log('[Browse] After deduplication:', {
+          moviesCount: normalizedMovies.length,
+          tvShowsCount: normalizedTVShows.length
         });
 
         // Store unfiltered results first for genre extraction
