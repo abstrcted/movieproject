@@ -102,7 +102,7 @@ export const normalizeTVShow = (show: TVShow): MovieTvShow => {
     seasons: show.seasons ? `${show.seasons} season${Number(show.seasons) > 1 ? 's' : ''}` : undefined,
     episodes: episodeCount,
     status: show.status,
-    network: show.networks || show.network,
+    network: Array.isArray(show.networks) ? show.networks.join(', ') : (show.networks || show.network),
     cast:
       show.cast?.map((c) => ({
         actor: c.name,

@@ -82,9 +82,9 @@ export interface TVShow {
   description?: string;
   genres?: string[];
   genre?: string[];
-  networks?: string;
+  networks?: string | string[];
   network?: string;
-  studios?: string;
+  studios?: string | string[];
   studio?: string;
   creators?: string[];
   creator?: string;

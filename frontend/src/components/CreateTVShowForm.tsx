@@ -37,6 +37,8 @@ const CreateTVShowForm = () => {
       episodes: 0,
       status: 'Returning Series',
       tMDbRating: 0,
+      popularity: 0,
+      voteCount: 0,
       overview: '',
       genres: [] as string[],
       networks: '',
