@@ -5,16 +5,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { sendVerificationEmail, confirmPasswordReset, requestPasswordReset } from '@/services/credentialsApi';
+import { confirmPasswordReset, requestPasswordReset } from '@/services/credentialsApi';
 
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState<boolean>(false);
-
-  const [verifyLoading, setVerifyLoading] = useState(false);
-  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
 
   // Token-based reset fields
   const [showResetFields, setShowResetFields] = useState(false);
@@ -38,7 +34,6 @@ export default function AccountPage() {
           return;
         }
         setUser(session.user);
-        setIsVerified(Boolean((session.user as any)?.emailVerified));
       } catch (err) {
         console.error('Failed to load session', err);
         router.push('/login');
@@ -123,35 +118,6 @@ export default function AccountPage() {
                     gap: '12px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ color: '#ccc', fontSize: '0.95rem' }}>Email verified:</div>
-                    <div style={{ fontWeight: 700 }}>{isVerified ? 'Yes' : 'No'}</div>
-                    {!isVerified && (
-                      <button
-                        onClick={async () => {
-                          setVerifyLoading(true);
-                          setVerifyMessage(null);
-                          try {
-                            const token = (user as any)?.accessToken || (user as any)?.token;
-                            const res = await sendVerificationEmail(token);
-                            if (res?.success) setVerifyMessage(res.message || 'Verification email sent');
-                            else setVerifyMessage(res.message || res.error || 'Failed to send verification email');
-                          } catch {
-                            setVerifyMessage('Unexpected error sending verification email');
-                          } finally {
-                            setVerifyLoading(false);
-                          }
-                        }}
-                        style={verifyButtonStyle}
-                        disabled={verifyLoading}
-                      >
-                        {verifyLoading ? 'Sending...' : 'Send verification email'}
-                      </button>
-                    )}
-                  </div>
-
-                  {verifyMessage && <div style={{ color: '#ffd700' }}>{verifyMessage}</div>}
-
                   <div style={{ marginTop: '8px', width: '100%', maxWidth: '420px' }}>
                     <div style={{ fontWeight: 600, marginBottom: '6px' }}>Change Password</div>
 
@@ -423,14 +389,6 @@ const primaryButtonStyle: React.CSSProperties = {
   padding: '10px 14px',
   borderRadius: 4,
   background: '#1E90FF',
-  color: '#fff',
-  border: 'none',
-  cursor: 'pointer'
-};
-const verifyButtonStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderRadius: 4,
-  background: '#e50914',
   color: '#fff',
   border: 'none',
   cursor: 'pointer'
