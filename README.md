@@ -95,6 +95,20 @@ This page was not required to integrate with the real Web API this sprint, but h
 George also designed and implemented our team’s major creative feature: the Watchlist.
 This included UI/UX planning, the add/remove interactions, and state updates to support a personalized list for logged-in users.
 
+## Published Front End Production Contributions
+
+### **Primitivo Bambao** 
+Worked on the full verification flow for our app and reconnected Group 4’s updated Render deployment link so the Movie API routes function correctly in production. Ensured authentication and data requests were fully integrated and stable.
+
+### **Jakita Kaur**  
+Fixed multiple bugs across the application and resolved inconsistencies within routing, state handling, and UI behavior. Identified issues where components behaved differently between development and production, corrected them, and ensured a clean and consistent final UI.
+
+### **Evan Tran**  
+Fixed the pagination issue where the app only returned 200 results instead of all available results from the API. Updated the logic to properly load all Movie and TV Show results from the 3rd-party APIs.
+
+### **George Njane**  
+Reviewed the final deployed version, checked all core features, and ensured everything matched the production sprint requirements.
+
 
 ---
 
@@ -154,6 +168,29 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 - **Summary:**  
   Final sprint wrap-up, verified all Beta II requirements were completed, tested all major pages, finalized the Watchlist feature, and
   updated the README before submission.
+
+
+### Published Front End Production Meetings
+📌 **Meeting — December 3**
+- **Time:** 10:00 PM – 10:37 PM  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  Catch-up meeting to review overall progress and identify what still needed to be finalized before deployment. We aligned on priorities for the final sprint tasks.
+
+📌 **Meeting — December 5**
+- **Time:** Evening discussion  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  Updated each other on remaining tasks, discussed what was not working, and coordinated fixes for verification, pagination, and UI inconsistencies before the final submission.
+
+📌 **Meeting — December 7**
+- **Time:** 10:10 AM – 10:40 AM  
+- **Location:** Discord Call  
+- **Attendance:** Full team  
+- **Summary:**  
+  Final meeting to wrap up the sprint. We tested the Vercel deployment, confirmed all features worked properly, checked API connections, and ensured everything met the Production Sprint requirements.
 
 ---
 
