@@ -20,6 +20,7 @@ const TvShowDetailPage = () => {
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
 
   const token = (session?.user as any)?.accessToken;
+  const isAdmin = Number((session?.user as any)?.id) === 8;
   const inWatchlist = tvShow ? isInWatchlist(tvShow.id) : false;
 
   useEffect(() => {
@@ -60,12 +61,32 @@ const TvShowDetailPage = () => {
   // Determine how many cast members to show
   const displayedCast = showAllCast ? tvShow.cast : tvShow.cast.slice(0, 4);
 
+  // Helper to check if image URL can use next/image
+  const allowedImageHosts = ['flagcdn.com', 'image.tmdb.org', 'placehold.co'];
+  const canUseNextImage = (src: string) => {
+    if (!src || typeof src !== 'string') return false;
+    try {
+      if (src.startsWith('/')) return true; // relative paths OK
+      const url = new URL(src);
+      return allowedImageHosts.includes(url.hostname);
+    } catch {
+      return false;
+    }
+  };
+
+  const posterUrl = tvShow.image || 'https://placehold.co/500x750/1a1a1a/808080.png?text=No+Poster';
+  const useNextImagePoster = canUseNextImage(posterUrl);
+
   return (
     <div className="min-h-screen bg-[#1B1A1A] text-white">
       {/* Background with blurred poster */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1B1A1A]/80 to-[#1B1A1A]" />
-        <Image src={tvShow.image} alt={tvShow.title} fill className="object-cover blur-3xl opacity-20" priority />
+        {useNextImagePoster ? (
+          <Image src={posterUrl} alt={tvShow.title} fill className="object-cover blur-3xl opacity-20" priority />
+        ) : (
+          <img src={posterUrl} alt={tvShow.title} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-20" />
+        )}
       </div>
 
       {/* Content */}
@@ -76,14 +97,22 @@ const TvShowDetailPage = () => {
             {/* Poster */}
             <div className="flex-shrink-0">
               <div className="relative w-full lg:w-[280px] xl:w-[320px] aspect-[2/3] rounded-lg overflow-hidden shadow-2xl">
-                <Image
-                  src={tvShow.image}
-                  alt={tvShow.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 320px"
-                />
+                {useNextImagePoster ? (
+                  <Image
+                    src={posterUrl}
+                    alt={tvShow.title}
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 320px"
+                  />
+                ) : (
+                  <img
+                    src={posterUrl}
+                    alt={tvShow.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
 
@@ -149,22 +178,24 @@ const TvShowDetailPage = () => {
                   )}
                 </button>
 
-                {/* Delete Button - Design Only (Non-functional) */}
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2"
-                  aria-label="Delete TV show"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Delete TV Show
-                </button>
+                {/* Delete Button - Admin Only */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2"
+                    aria-label="Delete TV show"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fillRule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Delete TV Show
+                  </button>
+                )}
               </div>
             </div>
           </div>

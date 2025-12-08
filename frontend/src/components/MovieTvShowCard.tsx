@@ -23,6 +23,20 @@ const MovieTvShowCard = ({ movie }: { movie: MovieTvShow }) => {
   }
   if (imageError) imageSrc = fallbackImage;
 
+  // Hosts that are configured in next.config.js remotePatterns/domains
+  const allowedImageHosts = ['flagcdn.com', 'image.tmdb.org', 'placehold.co'];
+  let useNextImage = true;
+  try {
+    if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) {
+      const h = new URL(imageSrc).hostname;
+      if (!allowedImageHosts.includes(h)) {
+        useNextImage = false;
+      }
+    }
+  } catch (e) {
+    useNextImage = false;
+  }
+
   const handleWatchlistToggle = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to detail page
     e.stopPropagation();
@@ -43,17 +57,27 @@ const MovieTvShowCard = ({ movie }: { movie: MovieTvShow }) => {
       <Link href={`/browse/${movie.type}/${movie.id}`} className="block">
         {/* Card Container with aspect ratio */}
         <div className="relative w-full aspect-2/3 overflow-hidden bg-gray-800 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl rounded-lg">
-          <Image
-            src={imageSrc}
-            alt={movie.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-            className="object-cover transition-all duration-300 group-hover:brightness-75"
-            priority={false}
-            onError={() => setImageError(true)}
-            // If using an external placeholder, avoid Next.js optimization to prevent loader errors
-            unoptimized={imageSrc === fallbackImage}
-          />
+          {useNextImage ? (
+            <Image
+              src={imageSrc}
+              alt={movie.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
+              className="object-cover transition-all duration-300 group-hover:brightness-75"
+              priority={false}
+              onError={() => setImageError(true)}
+              // If using an external placeholder, avoid Next.js optimization to prevent loader errors
+              unoptimized={imageSrc === fallbackImage}
+            />
+          ) : (
+            // Use a plain <img> when the host is not configured for next/image
+            <img
+              src={imageSrc}
+              alt={movie.title}
+              onError={() => setImageError(true)}
+              className="absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:brightness-75"
+            />
+          )}
 
           {/* Watchlist Button - Top Right */}
           <button
