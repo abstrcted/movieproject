@@ -3,8 +3,27 @@
 This repository hosts our **Front End** project for TCSS 460.  
 This repository serves as the starting point for our Group Web API Swaps project.
 It includes links to the Web APIs our group will use, initial design mockups, and documentation for the Alpha Sprint phase.
+
 ---
 
+‼️**Admin Account for Our Movies App**  
+Our Movies App includes one **Admin-level account** that has access to additional features within the frontend.  
+Only this Admin user can:
+- Create new Movies  
+- Create new TV Shows  
+- Delete Movies
+  
+**Admin Credentials:**  
+- **Email:** jakita987@gmail.com  
+- **Password:** Jakita2005!  
+- **Username:** JakitaK  
+- **User ID:** 8  
+- **Plan:** Admin (Active)
+This Admin account is the *only* account with elevated permissions in the Movies App.
+Regular users do not have access to these features and are limited to searching, viewing, filtering and using the standard app functionality.
+
+ ---
+ 
 ## 🌐 URL Links
 
 ## URL link to the Vercel-hosted web app
