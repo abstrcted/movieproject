@@ -5,21 +5,25 @@ import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { getMovieById } from '@/services/moviesApi';
+import { getMovieById, deleteMovie } from '@/services/moviesApi';
 import { useWatchlist } from '@/contexts/WatchlistContext';
 import { Plus, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const MovieDetailPage = () => {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [showAllCast, setShowAllCast] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [movie, setMovie] = useState<MovieTvShow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { data: session } = useSession();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
 
   const token = (session?.user as any)?.accessToken;
+  const isAdmin = Number((session?.user as any)?.id) === 8;
   const inWatchlist = movie ? isInWatchlist(movie.id) : false;
 
   useEffect(() => {
@@ -42,6 +46,27 @@ const MovieDetailPage = () => {
 
     fetchMovie();
   }, [id, token]);
+
+  const handleDelete = async () => {
+    if (!movie || !isAdmin) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await deleteMovie(movie.id, token);
+      if (response.success) {
+        // Close modal and redirect to browse page
+        setShowDeleteModal(false);
+        router.push('/browse');
+      } else {
+        alert(`Failed to delete movie: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting movie:', error);
+      alert('An error occurred while deleting the movie.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Show loading state
   if (loading) {
@@ -148,13 +173,14 @@ const MovieDetailPage = () => {
                   )}
                 </button>
 
-                {/* Delete Button - Design Only (Non-functional) */}
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2"
-                  aria-label="Delete movie"
-                >
+                {/* Delete Button - Admin Only */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2"
+                    aria-label="Delete movie"
+                  >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path
                       fillRule="evenodd"
@@ -164,6 +190,7 @@ const MovieDetailPage = () => {
                   </svg>
                   Delete Movie
                 </button>
+                )}
               </div>
             </div>
           </div>
@@ -237,17 +264,15 @@ const MovieDetailPage = () => {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+                disabled={isDeleting}
+                className="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // Design only - no actual delete functionality
-                  alert('This is a design-only feature. Delete functionality is not implemented.');
-                  setShowDeleteModal(false);
-                }}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path
@@ -256,7 +281,7 @@ const MovieDetailPage = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

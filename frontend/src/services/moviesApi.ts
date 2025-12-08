@@ -437,4 +437,50 @@ export const createMovie = async (movieData: Partial<Movie>, token?: string): Pr
   }
 };
 
+/**
+ * Delete a movie by ID
+ * DELETE /movies/:movie_id
+ */
+export const deleteMovie = async (movieId: string | number, token?: string): Promise<MoviesResponse> => {
+  try {
+    const config: any = {};
+
+    // Add authorization header if token is provided
+    if (token) {
+      config.headers = {
+        Authorization: `Bearer ${token}`
+      };
+    }
+
+    console.log('[Movies API] Deleting movie:', movieId);
+    const response = await moviesApi.delete(`/movies/${movieId}`, config);
+    console.log('[Movies API] Delete response:', response.data);
+
+    return {
+      success: true,
+      message: response.data?.message || 'Movie deleted successfully',
+      data: []
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Movies API] Error deleting movie:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to delete movie'
+      };
+    }
+
+    console.error('[Movies API] Unexpected error:', error);
+    return {
+      success: false,
+      message: 'Network error'
+    };
+  }
+};
+
 export default moviesApi;
