@@ -1,26 +1,21 @@
 # 🎬 Movie Dataset Frontend - Group 2
 
-This repository hosts our **Front End** project for TCSS 460.  
-This repository serves as the starting point for our Group Web API Swaps project.
-It includes links to the Web APIs our group will use, initial design mockups, and documentation for the Alpha Sprint phase.
+A modern, full-featured web application for browsing, searching, and managing Movies and TV Shows.  
+Built with **Next.js 15**, **TypeScript**, and **Material-UI**, this platform integrates multiple external APIs to deliver a complete entertainment browsing experience.
 
----
+## ✨ Overview
 
-‼️**Admin Account for Our Movies App**  
-Our Movies App includes one **Admin-level account** that has access to additional features within the frontend.  
-Only this Admin user can:
-- Create new Movies  
-- Create new TV Shows  
-- Delete Movies
-  
-**Admin Credentials:**  
-- **Email:** jakita987@gmail.com  
-- **Password:** Jakita2005!  
-- **Username:** JakitaK  
-- **User ID:** 8  
-- **Plan:** Admin (Active)
-This Admin account is the *only* account with elevated permissions in the Movies App.
-Regular users do not have access to these features and are limited to searching, viewing, filtering and using the standard app functionality.
+This application allows users to explore a large collection of Movies and TV Shows with advanced filters, detailed information pages, and a personalized watchlist.  
+The app includes full authentication, user account management, and session handling through Group 5’s Credentials API.
+
+Admin users have enhanced privileges that allow them to create new Movies and TV Shows and access additional tools not available to regular users.
+
+The frontend connects to:
+- **Group 3 TV API** for TV Show data  
+- **Group 4 Movie API** for Movie data  
+- **Group 5 Credentials API** for authentication & user management  
+
+This repository also documents our sprint milestones, team contributions, deployment links, and all completed features for the TCSS 460 Web API Swap Project.
 
  ---
  
@@ -42,7 +37,97 @@ Group 3 TV API
 ### **Credentials Web API**
 Group 5
 - **https://tcss460-group5-credentials-api.onrender.com/api-docs/**
+  
+---
 
+‼️**Admin Account for Our Movies App**  
+Our Movies App includes one **Admin-level account** that has access to additional features within the frontend.  
+Only this Admin user can:
+- Create new Movies  
+- Create new TV Shows  
+- Delete Movies
+  
+**Admin Credentials:**  
+- **Email:** jakita987@gmail.com  
+- **Password:** Jakita2005!  
+- **Username:** JakitaK  
+- **User ID:** 8  
+- **Plan:** Admin (Active)
+This Admin account is the *only* account with elevated permissions in the Movies App.
+Regular users do not have access to these features and are limited to searching, viewing, filtering and using the standard app functionality.
+
+--- 
+
+**Core Features**
+
+### **Authentication & User Management**
+- User registration with email verification  
+- Login/logout functionality  
+- Password reset and change password features  
+- Session management with NextAuth  
+- Role-based access control (Admin vs Regular users)  
+
+### **Browse & Search**
+- Browse all movies and TV shows  
+- Search functionality for movies and TV shows by title  
+- Pagination through results  
+- Display movie/TV show cards with posters  
+
+### **Advanced Filtering**
+- Filter by release year  
+- Filter by genre  
+- Filter by movie rating (G, PG, PG-13, R, NC-17, NR)  
+- Filter by TV show status (Ended, Returning Series, Canceled, In Production, Planned)  
+- Filter by runtime/length (Short, Medium, Long)  
+- URL persistence for filters (filters remain when navigating back)  
+- Combined filtering across multiple criteria  
+
+### **Movie Details**
+- View detailed movie information (title, director, studio, year, runtime)  
+- View movie overview/description  
+- Display genre tags  
+- Show cast & credits  
+- Display MPA rating  
+- Show box office gross  
+- View movie poster and backdrop images  
+
+### **TV Show Details**
+- View detailed TV show information (title, creator, network, seasons)  
+- View show overview/description  
+- Display genre tags  
+- Show cast & credits  
+- Display TV rating  
+- Show network information  
+- View show poster and backdrop images  
+
+### **Watchlist**
+- Add movies/TV shows to personal watchlist  
+- Remove items from watchlist  
+- Persistent watchlist panel  
+- Watchlist stored in local storage  
+
+### **Admin-Only Features (User ID 8 — jakita987@gmail.com)**
+- Add new movies to the database  
+- Add new TV shows to the database  
+- Delete existing movies  
+- Delete existing TV shows *(design-only, not functional)*  
+- Admin buttons only visible to the admin user  
+
+### **User Account Management**
+- View account information  
+- Update account details  
+- Change password functionality  
+
+### **Technical Features**
+- Responsive design (mobile, tablet, desktop)  
+- Material-UI components  
+- Server-side and client-side pagination  
+- Smart pagination with filtered results caching  
+- Integration with 3 external APIs (Group 3 TV Shows, Group 4 Movies, Group 5 Credentials)  
+- Error handling and API fallbacks  
+- TypeScript type safety
+- Next.js 15 with App Router
+  
 ---
 ## ALL Contributions
 
