@@ -107,10 +107,10 @@ Regular users do not have access to these features and are limited to searching,
 - Watchlist stored in local storage  
 
 ### **Admin-Only Features (User ID 8 — jakita987@gmail.com)**
-- Add new movies to the database  
-- Add new TV shows to the database  
+- Add new movies to the database
+- Add new TV shows to the database  *(design-only, not functional)*  
 - Delete existing movies  
-- Delete existing TV shows *(design-only, not functional)*  
+- Delete existing TV shows 
 - Admin buttons only visible to the admin user  
 
 ### **User Account Management**
@@ -298,6 +298,7 @@ All team members used **Discord** for calls and messages throughout the Alpha Sp
 
 ---
 
-## Sprint Comments
-- None:)
-
+## Comments
+- The blank TV shows in the database cannot be deleted from the frontend because we have not implemented a deletion feature for TV shows. All Movies and TV Shows created through our app are valid entries — the blank items are likely leftover testing data created by another group.  
+- Deletion actions in our system are only applicable to **Admin users**
+- To remove these blank TV show entries, we would need to identify their specific IDs and delete them directly through the API documentation tools provided by the corresponding Web API group.
